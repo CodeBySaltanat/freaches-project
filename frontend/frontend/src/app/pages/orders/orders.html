@@ -1,0 +1,42 @@
+<h2>📦 Твои заказы</h2>
+
+@for (order of orders; track $index) {
+
+  <div style="border:1px solid #ddd; padding:15px; margin:15px; border-radius:10px; background-color: #fff;">
+
+    <h3>Заказ #{{ $index + 1 }}</h3>
+
+    <p><b>Дата:</b> {{ order.createdAt || order.date }}</p>
+    <p><b>Адрес:</b> {{ order.address }}</p>
+    <p><b>Сумма:</b> {{ order.total }} ₸</p>
+
+    <h4>Состав:</h4>
+    <ul>
+      @for (item of order.items; track item.id) {
+        <li>{{ item.name }} — {{ item.price }} ₸</li>
+      }
+    </ul>
+
+    @if (!order.done) {
+      <label style="display: block; margin-bottom: 15px;">
+        <input type="checkbox" (change)="markDone($index)">
+        Получила заказ 🥪
+      </label>
+    }
+
+    @if (order.done) {
+      <p style="color:green; font-weight: bold;">
+        ✔ Получено: {{ order.receivedAt }}
+      </p>
+    }
+
+    <button (click)="deleteOrder($index, order.id)" 
+            style="padding: 10px 15px; background: #ff4d4d; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
+      🗑️ Отменить заказ
+    </button>
+
+  </div>
+
+} @empty {
+  <p style="padding: 20px; color: #666;">Пока заказов нет. Самое время что-нибудь перекусить! 🥪</p>
+}

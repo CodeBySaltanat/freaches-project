@@ -1,0 +1,32 @@
+<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh; background-color: #f4f4f4;">
+  
+  <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 320px; text-align: center;">
+    
+    <h2 style="color: #ff5722; margin-bottom: 25px; font-family: sans-serif;">Вход в Freaches 🥪</h2>
+
+    <div style="margin-bottom: 15px;">
+      <input [(ngModel)]="username" 
+             placeholder="Логин" 
+             style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; box-sizing: border-box;">
+    </div>
+
+    <div style="margin-bottom: 25px;">
+      <input [(ngModel)]="password" 
+             type="password" 
+             placeholder="Пароль" 
+             style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; box-sizing: border-box;">
+    </div>
+
+    <button (click)="login()" 
+            style="width: 100%; padding: 12px; background-color: #ff5722; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s;">
+      Войти
+    </button>
+
+    <p style="margin-top: 20px; font-size: 12px; color: #888;">Для тестов используй данные из Django Admin</p>
+    
+    <button (click)="register()" 
+        style="width: 100%; padding: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px;">
+        Зарегистрироваться
+    </button>
+  </div>
+</div>

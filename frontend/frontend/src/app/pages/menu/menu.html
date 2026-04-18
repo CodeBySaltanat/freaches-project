@@ -1,0 +1,34 @@
+@if (isLoggedIn) {
+  <div style="padding: 20px; background-color: #f9f9f9;">
+    
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+    </div>
+
+    <h2 style="text-align: center; color: #ff5722;">Наше сочное меню 🍔</h2>
+    
+    @for (cat of categories; track cat.name) {
+      <h3>{{ cat.name }}</h3>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        @for (item of cat.items; track item.id) {
+          <div style="border: 1px solid #ddd; padding: 15px; width: 200px; background: white; border-radius: 15px; text-align: center;">
+            <img [src]="item.img" style="width: 100%; height: 130px; object-fit: cover; border-radius: 10px;">
+            <h4>{{ item.name }}</h4>
+            <p>{{ item.price }} ₸</p>
+            <button (click)="addToCart(item)" style="background: #ff5722; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer;">
+              В корзину
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+} @else {
+  <div style="text-align: center; margin-top: 100px; font-family: sans-serif;">
+    <h1 style="font-size: 50px;">🥪</h1>
+    <h2>Чтобы посмотреть меню, нужно войти в систему</h2>
+    <p>Мы должны знать, кому готовить эти чудесные сэндвичи!</p>
+    <a routerLink="/login" style="display: inline-block; background: #ff5722; color: white; padding: 15px 30px; text-decoration: none; border-radius: 10px; font-weight: bold; margin-top: 20px;">
+      Перейти ко входу / регистрации
+    </a>
+  </div>
+}
