@@ -7,46 +7,89 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule], 
+  imports: [CommonModule, FormsModule],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
 export class LoginComponent {
   username = '';
   password = '';
+  message = '';
+  error = '';
+  isLoading = false;
 
   constructor(
-    private api: ApiService, 
-    private router: Router 
+    private api: ApiService,
+    private router: Router
   ) {}
 
-  login() {
-    this.api.login(this.username, this.password).subscribe({
-      next: (res: any) => {
-        localStorage.setItem('token', res.access); 
-        localStorage.setItem('username', this.username); // Сохраняем имя для профиля
-        
-        console.log('Данные входа сохранены');
-        alert('Ты вошла! Погнали за сэндвичами 😎');
+  private clearMessages() {
+    this.message = '';
+    this.error = '';
+  }
 
-        // Переходим в меню и обновляем страницу, чтобы Navbar увидел изменения
+  login() {
+    this.clearMessages();
+
+    if (!this.username.trim() || !this.password.trim()) {
+      this.error = 'Введите логин и пароль.';
+      return;
+    }
+
+    this.isLoading = true;
+
+    this.api.login(this.username.trim(), this.password).subscribe({
+      next: (res: any) => {
+        localStorage.setItem('token', res.access);
+        localStorage.setItem('username', this.username.trim());
+
+        this.message = 'Вход выполнен успешно.';
+        this.isLoading = false;
+
         this.router.navigate(['/menu']).then(() => {
           window.location.reload();
         });
       },
       error: (err) => {
-        alert('Ошибка логина! Проверь имя пользователя или пароль.');
+        this.isLoading = false;
+
+        if (err.status === 401) {
+          this.error = 'Неверный логин или пароль.';
+        } else if (err.status === 400) {
+          this.error = 'Проверь введённые данные.';
+        } else {
+          this.error = err?.error?.detail || 'Ошибка входа. Попробуй ещё раз.';
+        }
+
+        console.log('LOGIN ERROR:', err);
       }
     });
   }
 
   register() {
-    this.api.register(this.username, this.password).subscribe({
-      next: (res: any) => {
-        alert('Регистрация успешна! Теперь введи данные и нажми "Войти"');
+    this.clearMessages();
+
+    if (!this.username.trim() || !this.password.trim()) {
+      this.error = 'Для регистрации введи логин и пароль.';
+      return;
+    }
+
+    if (this.password.trim().length < 4) {
+      this.error = 'Пароль должен быть минимум 4 символа.';
+      return;
+    }
+
+    this.isLoading = true;
+
+    this.api.register(this.username.trim(), this.password).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.message = 'Регистрация успешна. Теперь нажми "Войти".';
       },
       error: (err) => {
-        alert('Ошибка при регистрации: что-то пошло не так');
+        this.isLoading = false;
+        this.error = err?.error?.error || 'Ошибка при регистрации.';
+        console.log('REGISTER ERROR:', err);
       }
     });
   }
