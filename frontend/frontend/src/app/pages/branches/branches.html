@@ -1,0 +1,17 @@
+<div style="padding: 20px;">
+    <h2 style="text-align: center; color: #ff5722;">Наши филиалы 📍</h2>
+  
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+      @for (branch of branches; track branch.id) {
+        <div style="border: 1px solid #ddd; padding: 20px; width: 250px; background: white; border-radius: 15px; text-align: center;">
+          <h3>{{ branch.name }}</h3>
+          <p>{{ branch.address }}</p>
+          <button
+            (click)="openBranch(branch)"
+            style="background: #ff5722; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+            Открыть меню
+          </button>
+        </div>
+      }
+    </div>
+  </div>
