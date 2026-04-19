@@ -7,89 +7,46 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule], 
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
 export class LoginComponent {
   username = '';
   password = '';
-  message = '';
-  error = '';
-  isLoading = false;
 
   constructor(
-    private api: ApiService,
-    private router: Router
+    private api: ApiService, 
+    private router: Router 
   ) {}
 
-  private clearMessages() {
-    this.message = '';
-    this.error = '';
-  }
-
   login() {
-    this.clearMessages();
-
-    if (!this.username.trim() || !this.password.trim()) {
-      this.error = 'Введите логин и пароль.';
-      return;
-    }
-
-    this.isLoading = true;
-
-    this.api.login(this.username.trim(), this.password).subscribe({
+    this.api.login(this.username, this.password).subscribe({
       next: (res: any) => {
-        localStorage.setItem('token', res.access);
-        localStorage.setItem('username', this.username.trim());
+        localStorage.setItem('token', res.access); 
+        localStorage.setItem('username', this.username); // Сохраняем имя для профиля
+        
+        console.log('Данные входа сохранены');
+        alert('Ты вошла! Погнали за сэндвичами 😎');
 
-        this.message = 'Вход выполнен успешно.';
-        this.isLoading = false;
-
+        // Переходим в меню и обновляем страницу, чтобы Navbar увидел изменения
         this.router.navigate(['/menu']).then(() => {
           window.location.reload();
         });
       },
       error: (err) => {
-        this.isLoading = false;
-
-        if (err.status === 401) {
-          this.error = 'Неверный логин или пароль.';
-        } else if (err.status === 400) {
-          this.error = 'Проверь введённые данные.';
-        } else {
-          this.error = err?.error?.detail || 'Ошибка входа. Попробуй ещё раз.';
-        }
-
-        console.log('LOGIN ERROR:', err);
+        alert('Ошибка логина! Проверь имя пользователя или пароль.');
       }
     });
   }
 
   register() {
-    this.clearMessages();
-
-    if (!this.username.trim() || !this.password.trim()) {
-      this.error = 'Для регистрации введи логин и пароль.';
-      return;
-    }
-
-    if (this.password.trim().length < 4) {
-      this.error = 'Пароль должен быть минимум 4 символа.';
-      return;
-    }
-
-    this.isLoading = true;
-
-    this.api.register(this.username.trim(), this.password).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.message = 'Регистрация успешна. Теперь нажми "Войти".';
+    this.api.register(this.username, this.password).subscribe({
+      next: (res: any) => {
+        alert('Регистрация успешна! Теперь введи данные и нажми "Войти"');
       },
       error: (err) => {
-        this.isLoading = false;
-        this.error = err?.error?.error || 'Ошибка при регистрации.';
-        console.log('REGISTER ERROR:', err);
+        alert('Ошибка при регистрации: что-то пошло не так');
       }
     });
   }
