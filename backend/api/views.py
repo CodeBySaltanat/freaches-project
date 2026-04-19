@@ -4,14 +4,26 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
-from .models import Product, Category, Order, OrderItem
-from .serializers import ProductSerializer, CategorySerializer, OrderSerializer
+from .models import Product, Category, Order, OrderItem, Branch
+from .serializers import ProductSerializer, CategorySerializer, OrderSerializer, BranchSerializer
+
+# филлиалы
+@api_view(['GET'])
+def get_branches(request):
+    branches = Branch.objects.all()
+    return Response(BranchSerializer(branches, many=True).data)
 
 # --- МЕНЮ И КАТЕГОРИИ ---
 
 @api_view(['GET'])
 def get_products(request):
-    products = Product.objects.all()
+    branch_id = request.GET.get('branch')
+
+    if branch_id:
+        products = Product.objects.filter(branch_id=branch_id)
+    else:
+        products = Product.objects.all()
+
     return Response(ProductSerializer(products, many=True).data)
 
 @api_view(['GET'])

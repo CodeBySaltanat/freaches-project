@@ -3,6 +3,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .views import *
 
 urlpatterns = [
+    path('branches/', get_branches),
     path('products/', get_products),
     path('categories/', get_categories),
     path('orders/', OrderView.as_view()),                

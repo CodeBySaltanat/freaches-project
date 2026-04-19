@@ -5,13 +5,15 @@ import { CartComponent } from './pages/cart/cart';
 import { OrdersComponent } from './pages/orders/orders';
 import { ProfileComponent } from './pages/profile/profile'; // Новый импорт
 import { authGuard } from './guards/auth.guard';
+import { BranchesComponent } from './pages/branches/branches';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
-  
-  { path: 'menu', component: MenuComponent, canActivate: [authGuard] },
+
+  { path: 'branches', component: BranchesComponent, canActivate: [authGuard] },
+  { path: 'menu/:id', component: MenuComponent, canActivate: [authGuard] },
   { path: 'cart', component: CartComponent, canActivate: [authGuard] },
   { path: 'orders', component: OrdersComponent, canActivate: [authGuard] },
-  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] }, // Путь к профилю
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
 ];

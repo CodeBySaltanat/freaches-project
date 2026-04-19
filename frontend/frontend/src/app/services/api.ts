@@ -36,4 +36,12 @@ export class ApiService {
   register(username: string, password: string) {
     return this.http.post('http://127.0.0.1:8000/api/register/', { username, password });
   }
+
+  getBranches() {
+    return this.http.get('http://127.0.0.1:8000/api/branches/');
+  }
+  
+  getProductsByBranch(branchId: number) {
+    return this.http.get(`http://127.0.0.1:8000/api/products/?branch=${branchId}`);
+  }
 }

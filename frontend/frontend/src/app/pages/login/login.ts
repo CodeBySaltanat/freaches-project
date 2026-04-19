@@ -30,7 +30,7 @@ export class LoginComponent {
         alert('Ты вошла! Погнали за сэндвичами 😎');
 
         // Переходим в меню и обновляем страницу, чтобы Navbar увидел изменения
-        this.router.navigate(['/menu']).then(() => {
+        this.router.navigate(['/branches']).then(() => {
           window.location.reload();
         });
       },
