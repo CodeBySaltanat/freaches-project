@@ -1,15 +1,21 @@
-<div style="display: flex; justify-content: center; margin-top: 50px; font-family: sans-serif;">
-  <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; text-align: center;">
-    
-    <div style="font-size: 60px; margin-bottom: 20px;">👤</div>
-    <h2 style="color: #333; margin-bottom: 10px;">Профиль пользователя</h2>
-    <p style="color: #666; font-size: 18px;">Привет, <span style="color: #ff5722; font-weight: bold;">{{ username }}</span>!</p>
-    
-    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+<section class="profile-page">
+  @if (loading) {
+    <div class="profile-card">Загружаю профиль...</div>
+  } @else {
+    <div class="profile-card">
+      <div class="profile-avatar">👤</div>
+      <h1>{{ profile?.username || 'Пользователь' }}</h1>
+      <p class="role-label">{{ profile?.role_label || 'Пользователь' }}</p>
+      <p class="profile-description">
+        {{ profile?.role === 'producer'
+          ? 'После входа тебе доступен экран обработки заказов.'
+          : 'После входа тебе доступны филиалы, меню, корзина и экран отслеживания заказов.' }}
+      </p>
 
-    <button (click)="logout()" 
-            style="background: #ff4d4d; color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s;">
-      Выйти из аккаунта
-    </button>
-  </div>
-</div>
+      <div class="profile-actions">
+        <a [routerLink]="profile?.role === 'producer' ? '/orders' : '/branches'">Открыть рабочий экран</a>
+        <button (click)="logout()">Выйти</button>
+      </div>
+    </div>
+  }
+</section>

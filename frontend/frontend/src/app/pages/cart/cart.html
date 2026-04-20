@@ -1,49 +1,56 @@
-@if (isLoggedIn) {
-  <div style="padding: 20px; max-width: 500px; margin: 0 auto; font-family: sans-serif;">
-    <h2 style="text-align: center; color: #333;">🛒 Ваша корзина</h2>
-    
-    @for (item of cart; track $index) {
-      <div style="border-bottom: 1px solid #eee; padding: 15px; display: flex; justify-content: space-between; align-items: center; background: white; margin-bottom: 5px; border-radius: 8px;">
-        <span>{{ item.name }} — <b>{{ item.price }} ₸</b></span>
-        <button (click)='removeItem($index)' style="color: #ff4d4d; border: 1px solid #ff4d4d; background: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">
-          Удалить
-        </button>
-      </div>
-    } @empty {
-      <div style="text-align: center; padding: 40px;">
-        <p style="font-size: 18px; color: #666;">Тут пока пусто, бегом в меню! 🥪</p>
-      </div>
-    }
+<section class="cart-page">
+  <div class="cart-page__header">
+    <div>
+      <span class="badge">Корзина</span>
+      <h1>Проверь заказ перед отправкой</h1>
+    </div>
+    <a routerLink="/branches" class="secondary-link">Вернуться к филиалам</a>
+  </div>
 
-    @if (cart.length > 0) {
-      <div style="margin-top: 30px; border-top: 2px solid #ff5722; padding-top: 20px;">
-        <h3 style="text-align: right; margin-bottom: 20px;">Итого: {{ getTotalPrice() }} ₸</h3>
-        
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #555;">Куда доставляем?</label>
-          <input [(ngModel)]="address" 
-                 placeholder="Введите ваш адрес 🏠" 
-                 style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; border-color: #ff5722;">
+  @if (cart.length === 0) {
+    <div class="empty-card">
+      <h2>Корзина пока пустая</h2>
+      <p>Добавь позиции из меню, и они появятся здесь.</p>
+    </div>
+  } @else {
+    <div class="cart-layout">
+      <div class="cart-list">
+        @for (item of cart; track $index) {
+          <article class="cart-item">
+            <div>
+              <h3>{{ item.name }}</h3>
+              <p>{{ item.description }}</p>
+            </div>
+            <div class="cart-item__right">
+              <strong>{{ item.price }} ₸</strong>
+              <button (click)="removeItem($index)">Удалить</button>
+            </div>
+          </article>
+        }
+      </div>
+
+      <aside class="checkout-card">
+        <h2>Оформление</h2>
+
+        <label class="field">
+          <span>Адрес</span>
+          <input [(ngModel)]="address" placeholder="Куда доставить заказ" />
+        </label>
+
+        <label class="field">
+          <span>Комментарий</span>
+          <textarea [(ngModel)]="comment" rows="4" placeholder="Например: позвонить за 5 минут"></textarea>
+        </label>
+
+        <div class="checkout-row">
+          <span>Итого</span>
+          <strong>{{ getTotalPrice() }} ₸</strong>
         </div>
 
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #555;">Комментарий к заказу</label>
-          <input [(ngModel)]="comment" 
-                 placeholder="Например: Позвоните за 5 минут 📝" 
-                 style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; border-color: #ff5722;">
-        </div>
-        
-        <button (click)="placeOrder()" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.3s;">
-          Оформить заказ 🚀
+        <button class="primary-button" (click)="placeOrder()" [disabled]="loading">
+          {{ loading ? 'Отправляю...' : 'Отправить заказ' }}
         </button>
-      </div>
-    }
-  </div>
-} @else {
-  <div style="text-align: center; margin-top: 100px; font-family: sans-serif;">
-    <h1 style="font-size: 50px;">🛒</h1>
-    <h2>Ваша корзина недоступна</h2>
-    <p>Пожалуйста, авторизуйтесь, чтобы мы могли сохранить ваш заказ.</p>
-    <a routerLink="/login" style="color: #4CAF50; font-weight: bold; text-decoration: underline;">Войти в аккаунт</a>
-  </div>
-}
+      </aside>
+    </div>
+  }
+</section>

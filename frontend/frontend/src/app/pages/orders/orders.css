@@ -1,0 +1,137 @@
+.badge {
+  display: inline-flex;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fff0e4;
+  color: #d05b11;
+  font-weight: 700;
+}
+
+.orders-page__header {
+  margin-bottom: 22px;
+}
+
+.orders-page__header h1 {
+  margin: 12px 0 8px;
+}
+
+.orders-page__header p {
+  margin: 0;
+  color: #667085;
+}
+
+.state-card,
+.order-card {
+  background: #fff;
+  border: 1px solid #eceff5;
+  border-radius: 22px;
+  box-shadow: 0 12px 28px rgba(31, 31, 31, 0.06);
+}
+
+.state-card {
+  padding: 20px;
+}
+
+.state-card--error {
+  background: #fff1f0;
+  color: #c23b2f;
+}
+
+.orders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.order-card {
+  padding: 20px;
+}
+
+.order-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+}
+
+.order-card__top h2 {
+  margin: 0 0 6px;
+}
+
+.muted {
+  margin: 0;
+  color: #667085;
+}
+
+.status-chip {
+  display: inline-flex;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-chip[data-status='pending'] {
+  background: #fff4db;
+  color: #9a6700;
+}
+
+.status-chip[data-status='accepted'] {
+  background: #eef4ff;
+  color: #2455c3;
+}
+
+.status-chip[data-status='ready'] {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.status-chip[data-status='out_of_stock'] {
+  background: #fff1f0;
+  color: #c23b2f;
+}
+
+.status-chip[data-status='completed'] {
+  background: #f2f4f7;
+  color: #344054;
+}
+
+.items-block {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #edf0f5;
+}
+
+.items-block h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.items-block ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #475467;
+}
+
+.actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.actions-row button {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #ff7a30, #ffb23f);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.actions-row button.danger {
+  background: #ffe3e0;
+  color: #b9382d;
+}

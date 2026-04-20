@@ -1,19 +1,27 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login';
+import { BranchesComponent } from './pages/branches/branches';
 import { MenuComponent } from './pages/menu/menu';
 import { CartComponent } from './pages/cart/cart';
 import { OrdersComponent } from './pages/orders/orders';
-import { ProfileComponent } from './pages/profile/profile'; // Новый импорт
+import { ProfileComponent } from './pages/profile/profile';
+import { ProducerBranchesComponent } from './pages/producer-branches/producer-branches';
+import { ProducerMenuComponent } from './pages/producer-menu/producer-menu';
 import { authGuard } from './guards/auth.guard';
-import { BranchesComponent } from './pages/branches/branches';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
 
-  { path: 'branches', component: BranchesComponent, canActivate: [authGuard] },
-  { path: 'menu/:id', component: MenuComponent, canActivate: [authGuard] },
-  { path: 'cart', component: CartComponent, canActivate: [authGuard] },
+  { path: 'branches', component: BranchesComponent, canActivate: [authGuard], data: { role: 'buyer' } },
+  { path: 'menu/:id', component: MenuComponent, canActivate: [authGuard], data: { role: 'buyer' } },
+  { path: 'cart', component: CartComponent, canActivate: [authGuard], data: { role: 'buyer' } },
+
+  { path: 'producer/branches', component: ProducerBranchesComponent, canActivate: [authGuard], data: { role: 'producer' } },
+  { path: 'producer/menu/:id', component: ProducerMenuComponent, canActivate: [authGuard], data: { role: 'producer' } },
+
   { path: 'orders', component: OrdersComponent, canActivate: [authGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
+
+  { path: '**', redirectTo: 'login' }
 ];

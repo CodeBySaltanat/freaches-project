@@ -1,0 +1,132 @@
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 30px;
+  align-items: center;
+  padding: 40px;
+  background: linear-gradient(180deg, #fff7ef 0%, #fff 50%, #f6f7fb 100%);
+  box-sizing: border-box;
+}
+
+.auth-badge {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #fff0e4;
+  color: #d05b11;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.auth-hero h1 {
+  font-size: 48px;
+  margin: 0 0 16px;
+}
+
+.auth-hero p {
+  font-size: 18px;
+  color: #555;
+  max-width: 560px;
+  line-height: 1.6;
+}
+
+.auth-card {
+  background: white;
+  border: 1px solid rgba(240, 160, 80, 0.18);
+  border-radius: 24px;
+  box-shadow: 0 18px 40px rgba(31, 31, 31, 0.08);
+  padding: 24px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: #f6f7fb;
+  padding: 6px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+}
+
+.tabs button {
+  border: none;
+  background: transparent;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  background: linear-gradient(135deg, #ff7a30, #ffb23f);
+  color: white;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.field input {
+  border: 1px solid #d8dde7;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 16px;
+}
+
+.role-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.role-picker button {
+  border: 1px solid #d9dee7;
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+}
+
+.role-picker button.selected {
+  border-color: #ff7a30;
+  background: #fff5ef;
+}
+
+.primary-btn {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  background: linear-gradient(135deg, #ff7a30, #ffb23f);
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.message {
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.message.error {
+  background: #fff1f0;
+  color: #c23b2f;
+}
+
+.message.success {
+  background: #effaf1;
+  color: #207a3c;
+}
+
+@media (max-width: 900px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+  }
+}

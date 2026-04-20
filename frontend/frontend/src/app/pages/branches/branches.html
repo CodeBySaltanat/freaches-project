@@ -1,17 +1,27 @@
-<div style="padding: 20px;">
-    <h2 style="text-align: center; color: #ff5722;">Наши филиалы 📍</h2>
-  
-    <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
-      @for (branch of branches; track branch.id) {
-        <div style="border: 1px solid #ddd; padding: 20px; width: 250px; background: white; border-radius: 15px; text-align: center;">
-          <h3>{{ branch.name }}</h3>
-          <p>{{ branch.address }}</p>
-          <button
-            (click)="openBranch(branch)"
-            style="background: #ff5722; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
-            Открыть меню
-          </button>
-        </div>
-      }
+<section class="branches-page">
+  <div class="branches-header">
+    <div>
+      <span class="badge">Режим покупателя</span>
+      <h1>Выберите филиал</h1>
+      <p>Сначала выбирай филиал, потом открывай меню именно этого филиала.</p>
     </div>
   </div>
+
+  @if (loading) {
+    <div class="state-card">Загружаю филиалы...</div>
+  } @else if (errorMessage) {
+    <div class="state-card state-card--error">{{ errorMessage }}</div>
+  } @else if (!branches.length) {
+    <div class="state-card">Филиалы пока не добавлены в базу.</div>
+  } @else {
+    <div class="branches-grid">
+      @for (branch of branches; track branch.id) {
+        <article class="branch-card">
+          <h3>{{ branch.name }}</h3>
+          <p>{{ branch.address }}</p>
+          <button (click)="openBranch(branch)">Открыть меню</button>
+        </article>
+      }
+    </div>
+  }
+</section>

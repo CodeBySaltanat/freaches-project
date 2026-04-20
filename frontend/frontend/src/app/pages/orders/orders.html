@@ -1,42 +1,72 @@
-<h2>📦 Твои заказы</h2>
-
-@for (order of orders; track $index) {
-
-  <div style="border:1px solid #ddd; padding:15px; margin:15px; border-radius:10px; background-color: #fff;">
-
-    <h3>Заказ #{{ $index + 1 }}</h3>
-
-    <p><b>Дата:</b> {{ order.createdAt || order.date }}</p>
-    <p><b>Адрес:</b> {{ order.address }}</p>
-    <p><b>Сумма:</b> {{ order.total }} ₸</p>
-
-    <h4>Состав:</h4>
-    <ul>
-      @for (item of order.items; track item.id) {
-        <li>{{ item.name }} — {{ item.price }} ₸</li>
-      }
-    </ul>
-
-    @if (!order.done) {
-      <label style="display: block; margin-bottom: 15px;">
-        <input type="checkbox" (change)="markDone($index)">
-        Получила заказ 🥪
-      </label>
-    }
-
-    @if (order.done) {
-      <p style="color:green; font-weight: bold;">
-        ✔ Получено: {{ order.receivedAt }}
+<section class="orders-page">
+  <div class="orders-page__header">
+    <div>
+      <span class="badge">{{ role === 'producer' ? 'Режим производителя' : 'Режим покупателя' }}</span>
+      <h1>{{ role === 'producer' ? 'Управление входящими заказами' : 'Мои заказы' }}</h1>
+      <p>
+        {{ role === 'producer'
+          ? 'Здесь ты принимаешь новые заказы и переводишь их по этапам обработки.'
+          : 'Здесь видно, что происходит с каждым заказом после оформления.' }}
       </p>
-    }
-
-    <button (click)="deleteOrder($index, order.id)" 
-            style="padding: 10px 15px; background: #ff4d4d; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
-      🗑️ Отменить заказ
-    </button>
-
+    </div>
   </div>
 
-} @empty {
-  <p style="padding: 20px; color: #666;">Пока заказов нет. Самое время что-нибудь перекусить! 🥪</p>
-}
+  @if (loading) {
+    <div class="state-card">Загружаю заказы...</div>
+  } @else if (errorMessage) {
+    <div class="state-card state-card--error">{{ errorMessage }}</div>
+  } @else if (!orders.length) {
+    <div class="state-card">Пока заказов нет.</div>
+  } @else {
+    <div class="orders-grid">
+      @for (order of orders; track order.id) {
+        <article class="order-card">
+          <div class="order-card__top">
+            <div>
+              <h2>Заказ #{{ order.id }}</h2>
+              <p class="muted">{{ order.created_at | date:'dd.MM.yyyy, HH:mm' }}</p>
+            </div>
+            <span class="status-chip" [attr.data-status]="order.status">{{ order.status_label }}</span>
+          </div>
+
+          @if (role === 'producer') {
+            <p><strong>Клиент:</strong> {{ order.username }}</p>
+          }
+
+          <p><strong>Адрес:</strong> {{ order.address }}</p>
+
+          @if (order.comment) {
+            <p><strong>Комментарий:</strong> {{ order.comment }}</p>
+          }
+
+          <p><strong>Сумма:</strong> {{ order.total_amount }} ₸</p>
+
+          <div class="items-block">
+            <h3>Состав заказа</h3>
+            <ul>
+              @for (item of order.items; track item.id) {
+                <li>{{ item.product_name }} × {{ item.quantity }} — {{ item.line_total }} ₸</li>
+              }
+            </ul>
+          </div>
+
+          @if (role === 'producer') {
+            <div class="actions-row">
+              @for (action of getProducerActions(order); track action.value) {
+                <button [class.danger]="action.type === 'danger'" (click)="updateStatus(order.id, action.value)">
+                  {{ action.label }}
+                </button>
+              }
+            </div>
+          }
+
+          @if (role === 'buyer' && order.status === 'ready') {
+            <div class="actions-row">
+              <button (click)="updateStatus(order.id, 'completed')">Подтвердить получение</button>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

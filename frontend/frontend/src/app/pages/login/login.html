@@ -1,32 +1,55 @@
-<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh; background-color: #f4f4f4;">
-  
-  <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 320px; text-align: center;">
-    
-    <h2 style="color: #ff5722; margin-bottom: 25px; font-family: sans-serif;">Вход в Freaches 🥪</h2>
+<section class="auth-page">
+  <div class="auth-hero">
+    <span class="auth-badge">Freaches</span>
+    <h1>Один вход — два режима работы</h1>
+    <p>
+      Покупатель оформляет заказ и отслеживает статус.
+      Производитель работает с входящими заказами.
+    </p>
+  </div>
 
-    <div style="margin-bottom: 15px;">
-      <input [(ngModel)]="username" 
-             placeholder="Логин" 
-             style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; box-sizing: border-box;">
+  <div class="auth-card">
+    <div class="tabs">
+      <button type="button" [class.active]="mode === 'login'" (click)="switchMode('login')">Вход</button>
+      <button type="button" [class.active]="mode === 'register'" (click)="switchMode('register')">Регистрация</button>
     </div>
 
-    <div style="margin-bottom: 25px;">
-      <input [(ngModel)]="password" 
-             type="password" 
-             placeholder="Пароль" 
-             style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; box-sizing: border-box;">
+    <h2>{{ mode === 'login' ? 'Добро пожаловать' : 'Создание аккаунта' }}</h2>
+
+    <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+    <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
+
+    <div class="field">
+      <label>Логин</label>
+      <input [(ngModel)]="username" placeholder="Например, saltanat">
     </div>
 
-    <button (click)="login()" 
-            style="width: 100%; padding: 12px; background-color: #ff5722; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s;">
-      Войти
-    </button>
+    <div class="field">
+      <label>Пароль</label>
+      <input [(ngModel)]="password" type="password" placeholder="Минимум 6 символов">
+    </div>
 
-    <p style="margin-top: 20px; font-size: 12px; color: #888;">Для тестов используй данные из Django Admin</p>
-    
-    <button (click)="register()" 
-        style="width: 100%; padding: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px;">
-        Зарегистрироваться
+    <div *ngIf="mode === 'register'">
+      <div class="field">
+        <label>Подтверждение пароля</label>
+        <input [(ngModel)]="confirmPassword" type="password" placeholder="Повтори пароль">
+      </div>
+
+      <div class="role-picker">
+        <button type="button" [class.selected]="role === 'buyer'" (click)="role = 'buyer'">
+          <span>🛍️</span>
+          <strong>Покупатель</strong>
+        </button>
+
+        <button type="button" [class.selected]="role === 'producer'" (click)="role = 'producer'">
+          <span>🏪</span>
+          <strong>Производитель</strong>
+        </button>
+      </div>
+    </div>
+
+    <button class="primary-btn" (click)="submit()" [disabled]="loading">
+      {{ loading ? 'Подожди...' : (mode === 'login' ? 'Войти' : 'Создать аккаунт') }}
     </button>
   </div>
-</div>
+</section>

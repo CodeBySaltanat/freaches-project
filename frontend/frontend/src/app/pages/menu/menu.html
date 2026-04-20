@@ -1,24 +1,38 @@
-@if (isLoggedIn) {
-  <div style="padding: 20px; background-color: #f9f9f9;">
-    <h2 style="text-align: center; color: #ff5722;">Меню филиала 🍔</h2>
-
-    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-      @for (item of products; track item.id) {
-        <div style="border: 1px solid #ddd; padding: 15px; width: 220px; background: white; border-radius: 15px; text-align: center;">
-          <h4>{{ item.name }}</h4>
-          <p>{{ item.description }}</p>
-          <p>{{ item.price }} ₸</p>
-          <button
-            (click)="addToCart(item)"
-            style="background: #ff5722; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer;">
-            В корзину
-          </button>
-        </div>
-      }
+<section class="menu-page">
+  <div class="menu-page__header">
+    <div>
+      <span class="badge">{{ branchName }}</span>
+      <h1>Меню филиала</h1>
+      <p>Выбирай позиции, добавляй их в корзину и затем оформляй заказ.</p>
     </div>
+    <a routerLink="/cart" class="secondary-link">Перейти в корзину</a>
   </div>
-} @else {
-  <div style="text-align: center; margin-top: 100px;">
-    <h2>Чтобы посмотреть меню, нужно войти в систему</h2>
-  </div>
-}
+
+  @if (loading) {
+    <div class="state-card">Загружаю меню...</div>
+  } @else if (errorMessage) {
+    <div class="state-card state-card--error">{{ errorMessage }}</div>
+  } @else if (!categories.length) {
+    <div class="state-card">Для этого филиала пока нет товаров.</div>
+  } @else {
+    @for (category of categories; track category.name) {
+      <section class="category-block">
+        <h2>{{ category.name }}</h2>
+        <div class="product-grid">
+          @for (item of category.items; track item.id) {
+            <article class="product-card">
+              <div class="product-card__body">
+                <h3>{{ item.name }}</h3>
+                <p>{{ item.description }}</p>
+                <div class="product-card__footer">
+                  <strong>{{ item.price }} ₸</strong>
+                  <button (click)="addToCart(item)">В корзину</button>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  }
+</section>

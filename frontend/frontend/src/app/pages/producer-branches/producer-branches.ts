@@ -3,21 +3,22 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-branches',
+  selector: 'app-producer-branches',
   standalone: true,
   imports: [CommonModule],
   template: `
     <div class="page">
       <div class="topbar">
         <div>
-          <h1>Филиалы Freaches</h1>
-          <p>Выбери филиал, чтобы открыть его меню</p>
+          <h1>Филиалы продавца</h1>
+          <p>Выбери филиал, чтобы управлять его меню</p>
         </div>
+
         <div class="topbar-actions">
-         <button (click)="openOrders()">Мои заказы</button>
-         <button (click)="openProfile()">Профиль</button>
-         <button class="ghost" (click)="logout()">Выйти</button>
+          <button (click)="openOrders()">Заказы</button>
+          <button class="ghost" (click)="logout()">Выйти</button>
         </div>
+      </div>
 
       <div class="state" *ngIf="loading">Загружаю филиалы...</div>
 
@@ -25,15 +26,11 @@ import { Router } from '@angular/router';
         {{ errorMessage }}
       </div>
 
-      <div class="state" *ngIf="!loading && !errorMessage && branches.length === 0">
-        Филиалы пока не добавлены в базу.
-      </div>
-
       <div class="grid" *ngIf="!loading && !errorMessage && branches.length > 0">
         <div class="card" *ngFor="let branch of branches">
           <h3>{{ branch.name }}</h3>
           <p>{{ branch.address }}</p>
-          <button (click)="openBranch(branch)">Открыть меню</button>
+          <button (click)="openBranch(branch.id)">Управлять меню</button>
         </div>
       </div>
     </div>
@@ -120,7 +117,7 @@ import { Router } from '@angular/router';
     }
   `]
 })
-export class BranchesComponent implements OnInit {
+export class ProducerBranchesComponent implements OnInit {
   branches: any[] = [];
   loading = true;
   errorMessage = '';
@@ -131,43 +128,30 @@ export class BranchesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    if (localStorage.getItem('role') !== 'buyer') {
-      this.router.navigate(['/orders']);
-      return;
-    }
-
     this.loadBranches();
   }
 
   async loadBranches() {
     try {
       const response = await fetch('http://127.0.0.1:8000/api/branches/');
-
       if (!response.ok) {
-        throw new Error('HTTP error');
+        throw new Error('Не удалось загрузить филиалы');
       }
 
       const data = await response.json();
-      console.log('branches loaded:', data);
-
       this.branches = Array.isArray(data) ? data : [];
       this.loading = false;
       this.errorMessage = '';
       this.cdr.detectChanges();
     } catch (error) {
-      console.error('branches fetch error:', error);
-      this.errorMessage = 'Не удалось загрузить филиалы.';
       this.loading = false;
+      this.errorMessage = error instanceof Error ? error.message : 'Ошибка загрузки филиалов';
       this.cdr.detectChanges();
     }
   }
 
-  openBranch(branch: any) {
-    this.router.navigate(['/menu', branch.id]);
-  }
-
-  openProfile() {
-    this.router.navigate(['/profile']);
+  openBranch(branchId: number) {
+    this.router.navigate(['/producer/menu', branchId]);
   }
 
   openOrders() {

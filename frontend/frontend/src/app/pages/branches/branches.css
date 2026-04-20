@@ -1,0 +1,67 @@
+.badge {
+  display: inline-flex;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fff0e4;
+  color: #d05b11;
+  font-weight: 700;
+}
+
+.branches-header {
+  margin-bottom: 24px;
+}
+
+.branches-header h1 {
+  margin: 12px 0 8px;
+}
+
+.branches-header p {
+  margin: 0;
+  color: #667085;
+}
+
+.state-card,
+.branch-card {
+  background: #fff;
+  border: 1px solid #eceff5;
+  border-radius: 22px;
+  box-shadow: 0 12px 28px rgba(31, 31, 31, 0.06);
+}
+
+.state-card {
+  padding: 20px;
+}
+
+.state-card--error {
+  background: #fff1f0;
+  color: #c23b2f;
+}
+
+.branches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.branch-card {
+  padding: 22px;
+}
+
+.branch-card h3 {
+  margin: 0 0 10px;
+}
+
+.branch-card p {
+  margin: 0 0 18px;
+  color: #667085;
+}
+
+.branch-card button {
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff7a30, #ffb23f);
+  color: #fff;
+  padding: 12px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
