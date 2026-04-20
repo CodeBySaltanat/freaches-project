@@ -55,12 +55,23 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image_url = models.URLField()
+    sort_order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f'{self.product.name} image {self.sort_order}'
+
+
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, default='pending')
     address = models.CharField(max_length=255, blank=True, default='')
     comment = models.TextField(blank=True, default='')
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

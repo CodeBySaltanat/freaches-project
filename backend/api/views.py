@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Branch, Category, Product, Order, OrderItem, UserProfile
+from .models import Branch, Category, Product, ProductImage, Order, OrderItem, UserProfile
 from .serializers import (
     BranchSerializer,
     CategorySerializer,
@@ -28,7 +28,12 @@ def get_branches(request):
 @permission_classes([AllowAny])
 def get_products(request):
     branch_id = request.GET.get('branch')
-    products = Product.objects.filter(branch_id=branch_id) if branch_id else Product.objects.all()
+
+    if branch_id:
+        products = Product.objects.filter(branch_id=branch_id).prefetch_related('images')
+    else:
+        products = Product.objects.all().prefetch_related('images')
+
     return Response(ProductSerializer(products, many=True).data, status=200)
 
 
@@ -51,17 +56,36 @@ class ProductManageView(APIView):
             return Response({'error': 'Только продавец может управлять товарами'}, status=403)
 
         branch_id = request.GET.get('branch')
-        products = Product.objects.filter(branch_id=branch_id) if branch_id else Product.objects.all()
+        products = Product.objects.filter(branch_id=branch_id).prefetch_related('images') if branch_id else Product.objects.all().prefetch_related('images')
         return Response(ProductSerializer(products, many=True).data)
 
     def post(self, request):
         if not self.is_producer(request):
             return Response({'error': 'Только продавец может добавлять товары'}, status=403)
 
-        serializer = ProductSerializer(data=request.data)
+        image_urls = request.data.get('image_urls', [])
+
+        serializer = ProductSerializer(data={
+            'name': request.data.get('name'),
+            'price': request.data.get('price'),
+            'description': request.data.get('description'),
+            'category': request.data.get('category'),
+            'branch': request.data.get('branch'),
+        })
+
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
+            product = serializer.save()
+
+            for index, url in enumerate(image_urls):
+                if str(url).strip():
+                    ProductImage.objects.create(
+                        product=product,
+                        image_url=str(url).strip(),
+                        sort_order=index
+                    )
+
+            return Response(ProductSerializer(product).data, status=201)
+
         return Response(serializer.errors, status=400)
 
     def put(self, request, pk):
@@ -73,10 +97,31 @@ class ProductManageView(APIView):
         except Product.DoesNotExist:
             return Response({'error': 'Товар не найден'}, status=404)
 
-        serializer = ProductSerializer(product, data=request.data, partial=True)
+        image_urls = request.data.get('image_urls', [])
+
+        serializer = ProductSerializer(product, data={
+            'name': request.data.get('name'),
+            'price': request.data.get('price'),
+            'description': request.data.get('description'),
+            'category': request.data.get('category'),
+            'branch': request.data.get('branch'),
+        }, partial=True)
+
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+            updated_product = serializer.save()
+
+            updated_product.images.all().delete()
+
+            for index, url in enumerate(image_urls):
+                if str(url).strip():
+                    ProductImage.objects.create(
+                        product=updated_product,
+                        image_url=str(url).strip(),
+                        sort_order=index
+                    )
+
+            return Response(ProductSerializer(updated_product).data)
+
         return Response(serializer.errors, status=400)
 
     def delete(self, request, pk):
@@ -90,6 +135,30 @@ class ProductManageView(APIView):
 
         product.delete()
         return Response({'message': 'Товар удалён'})
+
+
+class CategoryManageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def is_producer(self, request):
+        role = getattr(getattr(request.user, 'profile', None), 'role', 'buyer')
+        return role == 'producer'
+
+    def post(self, request):
+        if not self.is_producer(request):
+            return Response({'error': 'Только продавец может добавлять категории'}, status=403)
+
+        name = str(request.data.get('name', '')).strip()
+
+        if not name:
+            return Response({'error': 'Название категории не может быть пустым'}, status=400)
+
+        category, created = Category.objects.get_or_create(name=name)
+
+        return Response(
+            CategorySerializer(category).data,
+            status=201 if created else 200
+        )
 
 
 class OrderView(APIView):

@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import Branch, Category, Product, Order, OrderItem, UserProfile
+from .models import Branch, Category, Product, ProductImage, Order, OrderItem, UserProfile
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -17,10 +17,18 @@ class BranchSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'address']
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image_url', 'sort_order']
+
+
 class ProductSerializer(serializers.ModelSerializer):
+    images = ProductImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'description', 'category', 'branch']
+        fields = ['id', 'name', 'price', 'description', 'category', 'branch', 'images']
 
 
 class OrderItemReadSerializer(serializers.ModelSerializer):
