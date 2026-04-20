@@ -7,6 +7,8 @@ import { OrdersComponent } from './pages/orders/orders';
 import { ProfileComponent } from './pages/profile/profile';
 import { ProducerBranchesComponent } from './pages/producer-branches/producer-branches';
 import { ProducerMenuComponent } from './pages/producer-menu/producer-menu';
+import { FavoritesComponent } from './pages/favorites/favorites';
+import { ProductDetailsComponent } from './pages/product-details/product-details';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -15,7 +17,9 @@ export const routes: Routes = [
 
   { path: 'branches', component: BranchesComponent, canActivate: [authGuard], data: { role: 'buyer' } },
   { path: 'menu/:id', component: MenuComponent, canActivate: [authGuard], data: { role: 'buyer' } },
+  { path: 'product/:id', component: ProductDetailsComponent, canActivate: [authGuard], data: { role: 'buyer' } },
   { path: 'cart', component: CartComponent, canActivate: [authGuard], data: { role: 'buyer' } },
+  { path: 'favorites', component: FavoritesComponent, canActivate: [authGuard], data: { role: 'buyer' } },
 
   { path: 'producer/branches', component: ProducerBranchesComponent, canActivate: [authGuard], data: { role: 'producer' } },
   { path: 'producer/menu/:id', component: ProducerMenuComponent, canActivate: [authGuard], data: { role: 'producer' } },

@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CartService } from '../../services/cart';
+import { CartService, CartItem } from '../../services/cart';
 
 @Component({
   selector: 'app-cart',
@@ -17,8 +17,8 @@ import { CartService } from '../../services/cart';
         </div>
 
         <div class="topbar-actions">
-          <button (click)="goBack()">Назад в меню</button>
-         <button (click)="openOrders()">Мои заказы</button>
+          <button (click)="goBack()">Назад</button>
+          <button (click)="openOrders()">Мои заказы</button>
           <button class="ghost" (click)="logout()">Выйти</button>
         </div>
       </div>
@@ -28,15 +28,31 @@ import { CartService } from '../../services/cart';
       </div>
 
       <div *ngIf="cart.length > 0">
-        <div class="item" *ngFor="let item of cart; let i = index">
-          <div>
+        <div class="item" *ngFor="let item of cart">
+          <img
+            class="thumb"
+            [src]="item.images?.[0]?.image_url || 'https://picsum.photos/seed/noimage/300/200'"
+            [alt]="item.name"
+          />
+
+          <div class="item-main">
             <h3>{{ item.name }}</h3>
             <p>{{ item.description }}</p>
+
+            <div class="item-controls">
+              <div class="qty-box">
+                <button class="qty-btn" (click)="decreaseQty(item.id)">−</button>
+                <span class="qty-value">{{ item.quantity }}</span>
+                <button class="qty-btn" (click)="increaseQty(item.id)">+</button>
+              </div>
+
+              <button class="remove" (click)="removeItem(item.id)">Удалить</button>
+            </div>
           </div>
 
           <div class="item-right">
             <div class="price">{{ item.price }} ₸</div>
-            <button class="remove" (click)="removeItem(i)">Удалить</button>
+            <div class="subtotal">{{ getItemSubtotal(item) }} ₸</div>
           </div>
         </div>
 
@@ -51,7 +67,10 @@ import { CartService } from '../../services/cart';
             <input [(ngModel)]="comment" placeholder="Например: позвонить за 5 минут" />
           </div>
 
-          <div class="total">Итого: {{ getTotalPrice() }} ₸</div>
+          <div class="summary">
+            <div>Товаров: {{ getTotalCount() }}</div>
+            <div class="total">Итого: {{ getTotalPrice() }} ₸</div>
+          </div>
 
           <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
@@ -63,31 +82,203 @@ import { CartService } from '../../services/cart';
     </div>
   `,
   styles: [`
-    .page { min-height: 100vh; padding: 32px; background: #f7f1ea; font-family: Arial, sans-serif; box-sizing: border-box; }
-    .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 28px; }
-    h1 { margin: 0 0 8px; font-size: 36px; }
-    p { margin: 0; color: #666; }
-    .topbar-actions { display: flex; gap: 10px; }
-    .topbar-actions button { border: none; border-radius: 12px; padding: 12px 16px; background: #ff8a3d; color: white; font-weight: 700; cursor: pointer; }
-    .topbar-actions .ghost { background: #333; }
-    .state, .item, .checkout { background: white; border-radius: 18px; padding: 18px; box-shadow: 0 12px 30px rgba(0,0,0,0.06); margin-bottom: 16px; }
-    .item { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
-    .item h3 { margin: 0 0 8px; }
-    .item-right { text-align: right; }
-    .price { font-size: 20px; font-weight: 800; margin-bottom: 10px; }
-    .remove, .submit { border: none; border-radius: 12px; padding: 12px 16px; cursor: pointer; font-weight: 700; }
-    .remove { background: #fff1f0; color: #b42318; }
-    .field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-    .field label { font-weight: 700; }
-    .field input { padding: 12px 14px; border: 1px solid #d8d8d8; border-radius: 12px; font-size: 15px; }
-    .total { font-size: 24px; font-weight: 800; margin: 20px 0; }
-    .submit { width: 100%; background: #ff8a3d; color: white; }
-    .submit:disabled { opacity: 0.7; cursor: wait; }
-    .message.error { background: #fff1f0; color: #c23b2f; padding: 12px; border-radius: 12px; margin-bottom: 14px; font-weight: 600; }
+    .page {
+      min-height: 100vh;
+      padding: 32px;
+      background: #f7f1ea;
+      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 36px;
+    }
+
+    p {
+      margin: 0;
+      color: #666;
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .topbar-actions button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      background: #ff8a3d;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .topbar-actions .ghost {
+      background: #333;
+    }
+
+    .state, .item, .checkout {
+      background: white;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+      margin-bottom: 16px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 120px 1fr auto;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .thumb {
+      width: 120px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 14px;
+      display: block;
+      background: #f2f2f2;
+    }
+
+    .item-main h3 {
+      margin: 0 0 8px;
+    }
+
+    .item-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .qty-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff2e9;
+      border-radius: 999px;
+      padding: 8px 12px;
+    }
+
+    .qty-btn {
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 999px;
+      background: #ff8a3d;
+      color: white;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .qty-value {
+      min-width: 18px;
+      text-align: center;
+      font-weight: 800;
+      color: #111;
+    }
+
+    .remove, .submit {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .remove {
+      background: #fff1f0;
+      color: #b42318;
+    }
+
+    .item-right {
+      text-align: right;
+    }
+
+    .price {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .subtotal {
+      color: #666;
+      font-weight: 700;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      font-weight: 700;
+    }
+
+    .field input {
+      padding: 12px 14px;
+      border: 1px solid #d8d8d8;
+      border-radius: 12px;
+      font-size: 15px;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      margin: 20px 0;
+      font-weight: 700;
+      flex-wrap: wrap;
+    }
+
+    .total {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .submit {
+      width: 100%;
+      background: #ff8a3d;
+      color: white;
+    }
+
+    .submit:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    .message.error {
+      background: #fff1f0;
+      color: #c23b2f;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      font-weight: 600;
+    }
   `]
 })
 export class CartComponent implements OnInit {
-  cart: any[] = [];
+  cart: CartItem[] = [];
   address = '';
   comment = '';
   loading = false;
@@ -105,7 +296,39 @@ export class CartComponent implements OnInit {
       return;
     }
 
+    this.refreshCart();
+  }
+
+  refreshCart() {
     this.cart = this.cartService.getItems();
+    this.cdr.detectChanges();
+  }
+
+  increaseQty(productId: number) {
+    this.cartService.increaseItem(productId);
+    this.refreshCart();
+  }
+
+  decreaseQty(productId: number) {
+    this.cartService.decreaseItem(productId);
+    this.refreshCart();
+  }
+
+  removeItem(productId: number) {
+    this.cartService.removeItem(productId);
+    this.refreshCart();
+  }
+
+  getItemSubtotal(item: CartItem) {
+    return Number(item.price || 0) * Number(item.quantity || 0);
+  }
+
+  getTotalCount() {
+    return this.cartService.getTotalCount();
+  }
+
+  getTotalPrice() {
+    return this.cartService.getTotalPrice();
   }
 
   async placeOrder() {
@@ -132,20 +355,13 @@ export class CartComponent implements OnInit {
     this.loading = true;
     this.cdr.detectChanges();
 
-    const grouped: Record<number, { product: number; quantity: number }> = {};
-
-    for (const item of this.cart) {
-      if (grouped[item.id]) {
-        grouped[item.id].quantity += 1;
-      } else {
-        grouped[item.id] = { product: item.id, quantity: 1 };
-      }
-    }
-
     const orderData = {
       address: this.address,
       comment: this.comment,
-      items: Object.values(grouped)
+      items: this.cart.map(item => ({
+        product: item.id,
+        quantity: item.quantity
+      }))
     };
 
     try {
@@ -179,21 +395,10 @@ export class CartComponent implements OnInit {
       this.cdr.detectChanges();
       this.router.navigate(['/orders']);
     } catch (error) {
-      console.error('order create error', error);
       this.loading = false;
       this.errorMessage = error instanceof Error ? error.message : 'Не удалось отправить заказ.';
       this.cdr.detectChanges();
     }
-  }
-
-  removeItem(index: number) {
-    this.cartService.removeItem(index);
-    this.cart = this.cartService.getItems();
-    this.cdr.detectChanges();
-  }
-
-  getTotalPrice() {
-    return this.cart.reduce((sum, item) => sum + Number(item.price), 0);
   }
 
   goBack() {

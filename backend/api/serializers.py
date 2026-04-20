@@ -1,8 +1,18 @@
 from django.contrib.auth.models import User
+from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import Branch, Category, Product, ProductImage, Order, OrderItem, UserProfile
+from .models import (
+    Branch,
+    Category,
+    Product,
+    ProductImage,
+    Order,
+    OrderItem,
+    Review,
+    UserProfile
+)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -23,12 +33,42 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image_url', 'sort_order']
 
 
+class ReviewSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = Review
+        fields = ['id', 'user', 'user_name', 'rating', 'comment', 'created_at']
+
+
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
+    reviews = ReviewSerializer(many=True, read_only=True)
+    avg_rating = serializers.SerializerMethodField()
+    reviews_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'description', 'category', 'branch', 'images']
+        fields = [
+            'id',
+            'name',
+            'price',
+            'description',
+            'category',
+            'branch',
+            'is_available',
+            'images',
+            'reviews',
+            'avg_rating',
+            'reviews_count'
+        ]
+
+    def get_avg_rating(self, obj):
+        value = obj.reviews.aggregate(avg=Avg('rating'))['avg']
+        return round(value, 1) if value else 0.0
+
+    def get_reviews_count(self, obj):
+        return obj.reviews.count()
 
 
 class OrderItemReadSerializer(serializers.ModelSerializer):
@@ -48,6 +88,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id',
+            'buyer_order_number',
             'user',
             'user_name',
             'created_at',
@@ -65,10 +106,21 @@ class OrderSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     role_label = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
+    phone = serializers.SerializerMethodField()
+    saved_addresses = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'role', 'role_label']
+        fields = [
+            'id',
+            'username',
+            'role',
+            'role_label',
+            'full_name',
+            'phone',
+            'saved_addresses'
+        ]
 
     def get_role(self, obj):
         profile = getattr(obj, 'profile', None)
@@ -77,6 +129,18 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_role_label(self, obj):
         profile = getattr(obj, 'profile', None)
         return profile.get_role_display() if profile else 'Покупатель'
+
+    def get_full_name(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return profile.full_name if profile else ''
+
+    def get_phone(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return profile.phone if profile else ''
+
+    def get_saved_addresses(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return profile.saved_addresses if profile else []
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

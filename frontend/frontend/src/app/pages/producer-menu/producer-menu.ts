@@ -66,6 +66,13 @@ import { ActivatedRoute, Router } from '@angular/router';
         </div>
 
         <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="newProduct.is_available" />
+            Товар в наличии
+          </label>
+        </div>
+
+        <div class="field">
           <label>Ссылки на фото</label>
           <textarea
             [(ngModel)]="newProduct.imagesText"
@@ -85,6 +92,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 
           <div *ngIf="editingId !== product.id">
             <h3>{{ product.name }}</h3>
+            <div class="stock-label" [class.out]="!product.is_available">
+              {{ product.is_available ? 'В наличии' : 'Нет в наличии' }}
+            </div>
             <p>{{ product.description }}</p>
             <div class="price">{{ product.price }} ₸</div>
 
@@ -121,6 +131,13 @@ import { ActivatedRoute, Router } from '@angular/router';
                   {{ category.name }}
                 </option>
               </select>
+            </div>
+
+            <div class="field">
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="editProduct.is_available" />
+                Товар в наличии
+              </label>
             </div>
 
             <div class="field">
@@ -244,6 +261,30 @@ import { ActivatedRoute, Router } from '@angular/router';
       font-family: Arial, sans-serif;
     }
 
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .stock-label {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #ecfdf3;
+      color: #027a48;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .stock-label.out {
+      background: #e5e7eb;
+      color: #555;
+    }
+
     .products {
       display: grid;
       gap: 16px;
@@ -303,7 +344,8 @@ export class ProducerMenuComponent implements OnInit {
     price: '',
     description: '',
     category: '',
-    imagesText: ''
+    imagesText: '',
+    is_available: true
   };
 
   editingId: number | null = null;
@@ -312,7 +354,8 @@ export class ProducerMenuComponent implements OnInit {
     price: '',
     description: '',
     category: '',
-    imagesText: ''
+    imagesText: '',
+    is_available: true
   };
 
   constructor(
@@ -328,7 +371,7 @@ export class ProducerMenuComponent implements OnInit {
 
   parseImageUrls(text: string): string[] {
     return text
-      .split('\\n')
+      .split('\n')
       .map(url => url.trim())
       .filter(url => !!url);
   }
@@ -443,7 +486,8 @@ export class ProducerMenuComponent implements OnInit {
           description: this.newProduct.description,
           category: Number(this.newProduct.category),
           branch: this.branchId,
-          image_urls: this.parseImageUrls(this.newProduct.imagesText)
+          image_urls: this.parseImageUrls(this.newProduct.imagesText),
+          is_available: !!this.newProduct.is_available
         })
       });
 
@@ -458,7 +502,8 @@ export class ProducerMenuComponent implements OnInit {
         price: '',
         description: '',
         category: '',
-        imagesText: ''
+        imagesText: '',
+        is_available: true
       };
 
       this.successMessage = 'Товар успешно добавлен.';
@@ -476,7 +521,8 @@ export class ProducerMenuComponent implements OnInit {
       price: product.price,
       description: product.description,
       category: product.category,
-      imagesText: (product.images || []).map((img: any) => img.image_url).join('\\n')
+      imagesText: (product.images || []).map((img: any) => img.image_url).join('\n'),
+      is_available: product.is_available
     };
   }
 
@@ -487,7 +533,8 @@ export class ProducerMenuComponent implements OnInit {
       price: '',
       description: '',
       category: '',
-      imagesText: ''
+      imagesText: '',
+      is_available: true
     };
   }
 
@@ -507,7 +554,8 @@ export class ProducerMenuComponent implements OnInit {
           description: this.editProduct.description,
           category: Number(this.editProduct.category),
           branch: this.branchId,
-          image_urls: this.parseImageUrls(this.editProduct.imagesText)
+          image_urls: this.parseImageUrls(this.editProduct.imagesText),
+          is_available: !!this.editProduct.is_available
         })
       });
 
