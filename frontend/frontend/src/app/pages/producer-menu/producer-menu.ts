@@ -27,6 +27,17 @@ import { ActivatedRoute, Router } from '@angular/router';
       <div class="state" *ngIf="loading">Загружаю данные...</div>
 
       <div class="form-card" *ngIf="!loading">
+        <h2>Добавить новую категорию</h2>
+
+        <div class="field">
+          <label>Название категории</label>
+          <input [(ngModel)]="newCategoryName" placeholder="Например, Desserts" />
+        </div>
+
+        <button class="primary secondary" (click)="createCategory()">Добавить категорию</button>
+      </div>
+
+      <div class="form-card" *ngIf="!loading">
         <h2>Добавить новый товар</h2>
 
         <div class="field">
@@ -54,15 +65,32 @@ import { ActivatedRoute, Router } from '@angular/router';
           </select>
         </div>
 
+        <div class="field">
+          <label>Ссылки на фото</label>
+          <textarea
+            [(ngModel)]="newProduct.imagesText"
+            rows="5"
+            placeholder="Каждую ссылку с новой строки">
+          </textarea>
+        </div>
+
         <button class="primary" (click)="createProduct()">Добавить товар</button>
       </div>
 
       <div class="products" *ngIf="!loading">
         <div class="product-card" *ngFor="let product of products">
+          <div class="preview" *ngIf="product.images?.length > 0">
+            <img [src]="product.images[0].image_url" [alt]="product.name" />
+          </div>
+
           <div *ngIf="editingId !== product.id">
             <h3>{{ product.name }}</h3>
             <p>{{ product.description }}</p>
             <div class="price">{{ product.price }} ₸</div>
+
+            <div class="images-note" *ngIf="product.images?.length">
+              Фото: {{ product.images.length }}
+            </div>
 
             <div class="actions">
               <button (click)="startEdit(product)">Изменить</button>
@@ -93,6 +121,11 @@ import { ActivatedRoute, Router } from '@angular/router';
                   {{ category.name }}
                 </option>
               </select>
+            </div>
+
+            <div class="field">
+              <label>Ссылки на фото</label>
+              <textarea [(ngModel)]="editProduct.imagesText" rows="5"></textarea>
             </div>
 
             <div class="actions">
@@ -154,6 +187,10 @@ import { ActivatedRoute, Router } from '@angular/router';
       cursor: pointer;
     }
 
+    .secondary {
+      background: #444 !important;
+    }
+
     .topbar-actions .ghost {
       background: #333;
     }
@@ -198,16 +235,32 @@ import { ActivatedRoute, Router } from '@angular/router';
     }
 
     .field input,
-    .field select {
+    .field select,
+    .field textarea {
       padding: 12px 14px;
       border: 1px solid #d8d8d8;
       border-radius: 12px;
       font-size: 15px;
+      font-family: Arial, sans-serif;
     }
 
     .products {
       display: grid;
       gap: 16px;
+    }
+
+    .preview {
+      margin-bottom: 14px;
+    }
+
+    .preview img {
+      width: 100%;
+      max-width: 320px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 14px;
+      display: block;
+      background: #f2f2f2;
     }
 
     .product-card h3 {
@@ -218,6 +271,12 @@ import { ActivatedRoute, Router } from '@angular/router';
       font-size: 22px;
       font-weight: 800;
       margin: 16px 0;
+    }
+
+    .images-note {
+      margin-bottom: 12px;
+      font-weight: 700;
+      color: #ff8a3d;
     }
 
     .actions {
@@ -237,11 +296,14 @@ export class ProducerMenuComponent implements OnInit {
   products: any[] = [];
   categories: any[] = [];
 
+  newCategoryName = '';
+
   newProduct = {
     name: '',
     price: '',
     description: '',
-    category: ''
+    category: '',
+    imagesText: ''
   };
 
   editingId: number | null = null;
@@ -249,7 +311,8 @@ export class ProducerMenuComponent implements OnInit {
     name: '',
     price: '',
     description: '',
-    category: ''
+    category: '',
+    imagesText: ''
   };
 
   constructor(
@@ -261,6 +324,13 @@ export class ProducerMenuComponent implements OnInit {
   ngOnInit(): void {
     this.branchId = Number(this.route.snapshot.paramMap.get('id'));
     this.loadAll();
+  }
+
+  parseImageUrls(text: string): string[] {
+    return text
+      .split('\\n')
+      .map(url => url.trim())
+      .filter(url => !!url);
   }
 
   async loadAll() {
@@ -302,6 +372,52 @@ export class ProducerMenuComponent implements OnInit {
     }
   }
 
+  async createCategory() {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (!this.newCategoryName.trim()) {
+      this.errorMessage = 'Введите название категории.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await fetch('http://127.0.0.1:8000/api/manage-categories/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          name: this.newCategoryName.trim()
+        })
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Не удалось добавить категорию');
+      }
+
+      this.newCategoryName = '';
+      this.successMessage = 'Категория успешно добавлена.';
+      await this.loadAll();
+
+      if (result.id) {
+        this.newProduct.category = String(result.id);
+        if (this.editingId !== null) {
+          this.editProduct.category = result.id;
+        }
+      }
+    } catch (error) {
+      this.errorMessage = error instanceof Error ? error.message : 'Не удалось добавить категорию.';
+      this.cdr.detectChanges();
+    }
+  }
+
   async createProduct() {
     this.errorMessage = '';
     this.successMessage = '';
@@ -326,7 +442,8 @@ export class ProducerMenuComponent implements OnInit {
           price: Number(this.newProduct.price),
           description: this.newProduct.description,
           category: Number(this.newProduct.category),
-          branch: this.branchId
+          branch: this.branchId,
+          image_urls: this.parseImageUrls(this.newProduct.imagesText)
         })
       });
 
@@ -340,7 +457,8 @@ export class ProducerMenuComponent implements OnInit {
         name: '',
         price: '',
         description: '',
-        category: ''
+        category: '',
+        imagesText: ''
       };
 
       this.successMessage = 'Товар успешно добавлен.';
@@ -357,7 +475,8 @@ export class ProducerMenuComponent implements OnInit {
       name: product.name,
       price: product.price,
       description: product.description,
-      category: product.category
+      category: product.category,
+      imagesText: (product.images || []).map((img: any) => img.image_url).join('\\n')
     };
   }
 
@@ -367,7 +486,8 @@ export class ProducerMenuComponent implements OnInit {
       name: '',
       price: '',
       description: '',
-      category: ''
+      category: '',
+      imagesText: ''
     };
   }
 
@@ -386,7 +506,8 @@ export class ProducerMenuComponent implements OnInit {
           price: Number(this.editProduct.price),
           description: this.editProduct.description,
           category: Number(this.editProduct.category),
-          branch: this.branchId
+          branch: this.branchId,
+          image_urls: this.parseImageUrls(this.editProduct.imagesText)
         })
       });
 
