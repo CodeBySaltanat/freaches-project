@@ -1,8 +1,38 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CartService } from '../../services/cart';
+
+interface ProductImage {
+  image_url: string;
+}
+
+interface ProductReview {
+  user_name: string;
+  rating: number;
+  comment?: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  category: number;
+  branch: number;
+  avg_rating?: number;
+  reviews_count?: number;
+  reviews?: ProductReview[];
+  images?: ProductImage[];
+  is_available?: boolean;
+  branch_name?: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+}
 
 @Component({
   selector: 'app-menu',
@@ -10,32 +40,36 @@ import { CartService } from '../../services/cart';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="page">
-      <div class="topbar">
-        <div>
+      <div class="hero">
+        <div class="hero__text">
+          <span class="badge">{{ branchName }}</span>
           <h1>Меню филиала</h1>
-          <p>Выбирай товары, смотри рейтинг и отзывы</p>
+          <p>
+            Выбирай товары, смотри рейтинг, добавляй в избранное и оформляй заказ
+            в пару кликов.
+          </p>
         </div>
 
-        <div class="topbar-actions">
-          <button (click)="goBack()">Филиалы</button>
-          <button (click)="openFavorites()">Избранное</button>
-          <button (click)="openCart()">Корзина ({{ getCartCount() }})</button>
-          <button (click)="openOrders()">Мои заказы</button>
-          <button class="ghost" (click)="logout()">Выйти</button>
+        <div class="hero__actions">
+          <button class="ghost-btn" (click)="goBack()">Филиалы</button>
+          <button class="ghost-btn" (click)="openFavorites()">Избранное</button>
+          <button class="ghost-btn" (click)="openOrders()">Мои заказы</button>
+          <button class="primary-top-btn" (click)="openCart()">Корзина ({{ getCartCount() }})</button>
+          <button class="dark-btn" (click)="logout()">Выйти</button>
         </div>
       </div>
 
       <div class="filters-box" *ngIf="!loading">
         <div class="filter-field">
           <label>Поиск</label>
-          <input [(ngModel)]="searchTerm" placeholder="Например, chicken" />
+          <input [(ngModel)]="searchTerm" placeholder="Например, Chicken burger" />
         </div>
 
         <div class="filter-field">
           <label>Категория</label>
           <select [(ngModel)]="selectedCategory">
             <option value="">Все категории</option>
-            <option *ngFor="let category of categories" [value]="category.id">
+            <option *ngFor="let category of categories; trackBy: trackByCategory" [value]="category.id">
               {{ category.name }}
             </option>
           </select>
@@ -62,44 +96,62 @@ import { CartService } from '../../services/cart';
       <div class="state" *ngIf="loading">Загружаю меню...</div>
       <div class="state error" *ngIf="!loading && errorMessage">{{ errorMessage }}</div>
 
-      <div class="state" *ngIf="!loading && !errorMessage && filteredProducts.length === 0">
+      <div
+        class="state"
+        *ngIf="!loading && !errorMessage && filteredProducts.length === 0"
+      >
         Ничего не найдено по выбранным фильтрам.
       </div>
 
       <div class="grid" *ngIf="!loading && !errorMessage && filteredProducts.length > 0">
-        <div class="card clickable-card" *ngFor="let item of filteredProducts" (click)="openProduct(item.id)">
+        <article
+          class="card clickable-card"
+          *ngFor="let item of filteredProducts; trackBy: trackByProduct"
+          (click)="openProduct(item.id)"
+        >
           <div class="carousel">
-            <ng-container *ngIf="item.images?.length > 0; else noImage">
+            <ng-container *ngIf="item.images?.length; else noImageTpl">
               <img
                 class="product-image"
-                [src]="item.images?.[getImageIndex(item.id)]?.image_url || 'https://picsum.photos/seed/noimage/600/400'"
+                [src]="item.images?.[getImageIndex(item.id)]?.image_url || fallbackImage"
                 [alt]="item.name"
               />
 
               <button
                 class="nav prev"
-                *ngIf="item.images.length > 1"
-                (click)="prevImage(item.id, item.images.length, $event)">
+                *ngIf="(item.images?.length || 0) > 1"
+                (click)="prevImage(item.id, item.images!.length, $event)"
+              >
                 ‹
               </button>
 
               <button
                 class="nav next"
-                *ngIf="item.images.length > 1"
-                (click)="nextImage(item.id, item.images.length, $event)">
+                *ngIf="(item.images?.length || 0) > 1"
+                (click)="nextImage(item.id, item.images!.length, $event)"
+              >
                 ›
               </button>
             </ng-container>
 
-            <ng-template #noImage>
+            <ng-template #noImageTpl>
               <div class="no-image">Нет фото</div>
             </ng-template>
 
             <button
               class="favorite-btn"
               [class.active]="isFavorite(item.id)"
-              (click)="toggleFavorite(item.id, $event)">
-              {{ isFavorite(item.id) ? '❤️' : '🤍' }}
+              (click)="toggleFavorite(item.id, $event)"
+              aria-label="Избранное"
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M12 20s-6.5-4.2-8.6-8C1.7 9.2 3 5.8 6.4 5.1A4.7 4.7 0 0 1 12 7.2a4.7 4.7 0 0 1 5.6-2.1c3.4.7 4.7 4.1 3 6.9C18.5 15.8 12 20 12 20Z"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  [attr.fill]="isFavorite(item.id) ? 'currentColor' : 'none'"
+                />
+              </svg>
             </button>
           </div>
 
@@ -122,7 +174,13 @@ import { CartService } from '../../services/cart';
 
           <div class="bottom-row">
             <ng-container *ngIf="item.is_available !== false; else unavailableTpl">
-              <button *ngIf="getItemCount(item.id) === 0" (click)="addToCart(item, $event)">В корзину</button>
+              <button
+                class="cart-btn"
+                *ngIf="getItemCount(item.id) === 0"
+                (click)="addToCart(item, $event)"
+              >
+                В корзину
+              </button>
 
               <div class="qty-box" *ngIf="getItemCount(item.id) > 0" (click)="$event.stopPropagation()">
                 <button class="qty-btn" (click)="decreaseQty(item.id, $event)">−</button>
@@ -140,7 +198,7 @@ import { CartService } from '../../services/cart';
             <div class="similar-title">Похожие товары</div>
 
             <div class="similar-list">
-              <div class="similar-item" *ngFor="let similar of getSimilarProducts(item)">
+              <div class="similar-item" *ngFor="let similar of getSimilarProducts(item); trackBy: trackByProduct">
                 <div class="similar-info">
                   <strong>{{ similar.name }}</strong>
                   <span>{{ similar.price }} ₸</span>
@@ -149,7 +207,8 @@ import { CartService } from '../../services/cart';
                 <button
                   class="mini-btn"
                   *ngIf="similar.is_available !== false"
-                  (click)="addToCart(similar, $event)">
+                  (click)="addToCart(similar, $event)"
+                >
                   +
                 </button>
 
@@ -165,13 +224,15 @@ import { CartService } from '../../services/cart';
           <div class="reviews-box" *ngIf="isReviewsOpen(item.id)" (click)="$event.stopPropagation()">
             <div class="review-form" *ngIf="role === 'buyer'">
               <label>Твоя оценка</label>
+
               <div class="stars">
                 <button
                   type="button"
                   class="star-btn"
                   *ngFor="let star of starOptions"
                   [class.active]="getSelectedRating(item.id) >= star"
-                  (click)="setRating(item.id, star, $event)">
+                  (click)="setRating(item.id, star, $event)"
+                >
                   ★
                 </button>
               </div>
@@ -181,15 +242,15 @@ import { CartService } from '../../services/cart';
                 [ngModel]="getReviewComment(item.id)"
                 (ngModelChange)="setReviewComment(item.id, $event)"
                 rows="3"
-                placeholder="Напиши честный отзыв">
-              </textarea>
+                placeholder="Напиши честный отзыв"
+              ></textarea>
 
               <button class="submit-review" (click)="submitReview(item.id)">
                 Сохранить отзыв
               </button>
             </div>
 
-            <div class="review-list" *ngIf="item.reviews?.length > 0; else noReviews">
+            <div class="review-list" *ngIf="item.reviews?.length; else emptyReviewsTpl">
               <div class="review-item" *ngFor="let review of item.reviews">
                 <div class="review-head">
                   <strong>{{ review.user_name }}</strong>
@@ -199,75 +260,137 @@ import { CartService } from '../../services/cart';
               </div>
             </div>
 
-            <ng-template #noReviews>
+            <ng-template #emptyReviewsTpl>
               <div class="empty-reviews">Пока отзывов нет.</div>
             </ng-template>
           </div>
-        </div>
+        </article>
       </div>
     </div>
   `,
   styles: [`
     .page {
       min-height: 100vh;
-      padding: 32px;
-      background: #f7f1ea;
-      font-family: Arial, sans-serif;
+      padding: 40px;
+      background:
+        radial-gradient(circle at 10% 18%, rgba(52, 116, 255, 0.07), transparent 24%),
+        radial-gradient(circle at 92% 80%, rgba(90, 187, 255, 0.09), transparent 22%),
+        linear-gradient(180deg, #f8fafc 0%, #f3f7fc 100%);
+      font-family: Inter, Arial, sans-serif;
       box-sizing: border-box;
-      max-width: 1280px;
+      max-width: 1380px;
       margin: 0 auto;
     }
 
-    .topbar {
+    .hero {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 20px;
+      align-items: end;
+      gap: 24px;
       margin-bottom: 28px;
       flex-wrap: wrap;
     }
 
+    .hero__text {
+      max-width: 720px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(38, 99, 255, 0.08);
+      color: #2459e6;
+      font-weight: 800;
+      font-size: 14px;
+      border: 1px solid rgba(38, 99, 255, 0.14);
+      box-shadow: 0 8px 18px rgba(37, 89, 230, 0.05);
+    }
+
     h1 {
-      margin: 0 0 8px;
-      font-size: 36px;
+      margin: 14px 0 10px;
+      font-size: 58px;
+      line-height: 0.98;
+      letter-spacing: -1.6px;
+      color: #111827;
+      font-weight: 900;
     }
 
     p {
       margin: 0;
-      color: #666;
+      color: #5c6c86;
+      line-height: 1.65;
     }
 
-    .topbar-actions {
+    .hero__actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
-    .topbar-actions button,
-    .card button,
-    .submit-review {
+    .ghost-btn,
+    .primary-top-btn,
+    .dark-btn,
+    .cart-btn,
+    .submit-review,
+    .clear-btn {
       border: none;
-      border-radius: 12px;
-      padding: 12px 16px;
-      background: #ff8a3d;
-      color: white;
-      font-weight: 700;
+      border-radius: 16px;
+      padding: 13px 16px;
+      font-weight: 800;
       cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
     }
 
-    .topbar-actions .ghost {
-      background: #333;
+    .ghost-btn {
+      background: rgba(255, 255, 255, 0.88);
+      color: #22324a;
+      border: 1px solid #dfe7f2;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
+    }
+
+    .primary-top-btn,
+    .cart-btn,
+    .submit-review {
+      background: linear-gradient(135deg, #2f6cff, #57b8ff);
+      color: white;
+      box-shadow: 0 14px 28px rgba(47, 108, 255, 0.22);
+    }
+
+    .dark-btn,
+    .clear-btn,
+    .reviews-toggle {
+      background: #1f2937;
+      color: white;
+    }
+
+    .ghost-btn:hover,
+    .primary-top-btn:hover,
+    .dark-btn:hover,
+    .cart-btn:hover,
+    .submit-review:hover,
+    .clear-btn:hover,
+    .reviews-toggle:hover,
+    .favorite-btn:hover,
+    .nav:hover {
+      transform: translateY(-1px);
     }
 
     .filters-box {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
-      background: white;
-      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 24px;
       padding: 20px;
       margin-bottom: 22px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+      border: 1px solid #e2e9f4;
+      box-shadow:
+        0 18px 36px rgba(15, 23, 42, 0.06),
+        0 6px 16px rgba(15, 23, 42, 0.03);
+      backdrop-filter: blur(10px);
     }
 
     .filter-field {
@@ -276,17 +399,32 @@ import { CartService } from '../../services/cart';
       gap: 8px;
     }
 
-    .filter-field label {
-      font-weight: 700;
-      color: #333;
+    .filter-field label,
+    .review-form label {
+      font-size: 14px;
+      font-weight: 800;
+      color: #1d2940;
     }
 
     .filter-field input,
-    .filter-field select {
-      padding: 12px 14px;
-      border: 1px solid #d8d8d8;
-      border-radius: 12px;
+    .filter-field select,
+    textarea {
+      padding: 13px 14px;
+      border: 1px solid #d8e4ff;
+      background: #f9fbff;
+      border-radius: 14px;
       font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      font-family: inherit;
+      color: #0f172a;
+    }
+
+    .filter-field input:focus,
+    .filter-field select:focus,
+    textarea:focus {
+      border-color: #6d9cff;
+      box-shadow: 0 0 0 4px rgba(91, 140, 255, 0.14);
       background: white;
     }
 
@@ -296,54 +434,59 @@ import { CartService } from '../../services/cart';
     }
 
     .clear-btn {
-      border: none;
-      border-radius: 12px;
-      padding: 12px 16px;
-      background: #444;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
       width: 100%;
     }
 
     .state {
-      background: white;
-      border-radius: 16px;
-      padding: 18px;
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 20px;
+      padding: 18px 20px;
       margin-bottom: 20px;
+      border: 1px solid #e3eaf4;
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.04);
+      font-weight: 700;
+      color: #31415d;
     }
 
     .state.error {
       color: #b42318;
       background: #fff1f0;
+      border-color: #ffd7d2;
     }
 
     .state.success {
       color: #027a48;
       background: #ecfdf3;
+      border-color: #c7f0d7;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
     }
 
     .card {
-      background: white;
-      border-radius: 18px;
-      padding: 22px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 26px;
+      padding: 18px;
+      border: 1px solid #e4ebf5;
+      box-shadow:
+        0 18px 36px rgba(15, 23, 42, 0.06),
+        0 6px 16px rgba(15, 23, 42, 0.03);
     }
 
     .clickable-card {
       cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     }
 
     .clickable-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 16px 34px rgba(0,0,0,0.08);
+      transform: translateY(-3px);
+      border-color: #d2e1fb;
+      box-shadow:
+        0 24px 42px rgba(15, 23, 42, 0.09),
+        0 8px 18px rgba(15, 23, 42, 0.04);
     }
 
     .carousel {
@@ -354,61 +497,68 @@ import { CartService } from '../../services/cart';
     .product-image,
     .no-image {
       width: 100%;
-      height: 220px;
+      height: 230px;
       object-fit: cover;
-      border-radius: 16px;
+      border-radius: 18px;
       display: block;
-      background: #f2f2f2;
+      background: linear-gradient(135deg, #edf4ff, #f8fbff);
+      border: 1px solid #e2ebf8;
     }
 
     .no-image {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #888;
-      font-weight: 700;
+      color: #7687a0;
+      font-weight: 800;
+    }
+
+    .nav,
+    .favorite-btn {
+      position: absolute;
+      border: none;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
     }
 
     .nav {
-      position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      width: 38px;
-      height: 38px;
-      border-radius: 999px !important;
-      padding: 0 !important;
-      background: rgba(0, 0, 0, 0.55) !important;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.58);
+      color: white;
       font-size: 24px;
       line-height: 1;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
     }
 
-    .prev {
-      left: 10px;
-    }
-
-    .next {
-      right: 10px;
-    }
+    .prev { left: 10px; }
+    .next { right: 10px; }
 
     .favorite-btn {
-      position: absolute;
       top: 10px;
       right: 10px;
       width: 42px;
       height: 42px;
-      border-radius: 999px !important;
-      padding: 0 !important;
-      background: rgba(255,255,255,0.92) !important;
-      color: #ff4d6d !important;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.94);
+      color: #8fa0bb;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+    }
+
+    .favorite-btn svg {
+      width: 20px;
+      height: 20px;
+      display: block;
     }
 
     .favorite-btn.active {
-      background: white !important;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+      color: #ff5b7f;
+      background: white;
     }
 
     .meta-row {
@@ -421,30 +571,38 @@ import { CartService } from '../../services/cart';
 
     .category-chip,
     .stock-chip {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       border-radius: 999px;
-      padding: 6px 10px;
+      padding: 7px 11px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .category-chip {
-      background: #fff2e9;
-      color: #ff8a3d;
+      background: rgba(47, 108, 255, 0.08);
+      color: #2459e6;
+      border: 1px solid rgba(47, 108, 255, 0.12);
     }
 
     .stock-chip {
       background: #ecfdf3;
       color: #027a48;
+      border: 1px solid #c7f0d7;
     }
 
     .stock-chip.out {
-      background: #e5e7eb;
-      color: #555;
+      background: #eef2f7;
+      color: #556173;
+      border: 1px solid #d8e1eb;
     }
 
     .card h3 {
       margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.2;
+      color: #172335;
+      font-weight: 900;
     }
 
     .rating-line {
@@ -455,25 +613,26 @@ import { CartService } from '../../services/cart';
     }
 
     .rating-value {
-      font-weight: 800;
-      color: #111;
+      font-weight: 900;
+      color: #111827;
     }
 
     .rating-count {
-      color: #777;
+      color: #73839a;
       font-size: 14px;
     }
 
     .desc {
       min-height: 48px;
       margin-bottom: 18px;
+      color: #6b7c94;
     }
 
     .price {
-      font-size: 22px;
-      font-weight: 800;
+      font-size: 24px;
+      font-weight: 900;
       margin-bottom: 16px;
-      color: #111;
+      color: #111827;
     }
 
     .bottom-row {
@@ -488,9 +647,10 @@ import { CartService } from '../../services/cart';
       display: inline-flex;
       align-items: center;
       gap: 12px;
-      background: #fff2e9;
+      background: rgba(47, 108, 255, 0.08);
       border-radius: 999px;
       padding: 8px 12px;
+      border: 1px solid rgba(47, 108, 255, 0.10);
     }
 
     .qty-btn {
@@ -498,40 +658,42 @@ import { CartService } from '../../services/cart';
       height: 34px;
       border: none;
       border-radius: 999px;
-      background: #ff8a3d;
+      background: linear-gradient(135deg, #2f6cff, #57b8ff);
       color: white;
       font-size: 22px;
       line-height: 1;
       cursor: pointer;
+      box-shadow: 0 10px 18px rgba(47, 108, 255, 0.18);
     }
 
     .qty-value {
       min-width: 18px;
       text-align: center;
-      font-weight: 800;
-      color: #111;
+      font-weight: 900;
+      color: #111827;
     }
 
     .unavailable {
-      background: #e5e7eb;
-      color: #555;
+      background: #eef2f7;
+      color: #556173;
       padding: 12px 16px;
-      border-radius: 12px;
-      font-weight: 700;
+      border-radius: 14px;
+      font-weight: 800;
+      border: 1px solid #d8e1eb;
     }
 
     .similar-box {
-      background: #fff8f3;
-      border: 1px solid #ffd9bf;
-      border-radius: 14px;
+      background: #f7faff;
+      border: 1px solid #dfe9fb;
+      border-radius: 18px;
       padding: 14px;
       margin-bottom: 14px;
     }
 
     .similar-title {
-      font-weight: 800;
+      font-weight: 900;
       margin-bottom: 10px;
-      color: #111;
+      color: #172335;
     }
 
     .similar-list {
@@ -545,8 +707,9 @@ import { CartService } from '../../services/cart';
       align-items: center;
       gap: 12px;
       background: white;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 10px 12px;
+      border: 1px solid #e7eef8;
     }
 
     .similar-info {
@@ -555,49 +718,56 @@ import { CartService } from '../../services/cart';
       gap: 4px;
     }
 
+    .similar-info strong {
+      color: #1b2940;
+    }
+
     .similar-info span {
-      color: #666;
+      color: #6b7c94;
       font-size: 14px;
     }
 
     .mini-btn {
       width: 38px;
       height: 38px;
-      border-radius: 999px !important;
-      padding: 0 !important;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #2f6cff, #57b8ff);
+      color: white;
       font-size: 22px;
       line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 10px 18px rgba(47, 108, 255, 0.16);
     }
 
     .mini-unavailable {
-      background: #e5e7eb;
-      color: #555;
+      background: #eef2f7;
+      color: #556173;
       border-radius: 999px;
       padding: 8px 10px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .reviews-toggle {
-      background: #444 !important;
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 12px 16px;
+      font-weight: 800;
+      cursor: pointer;
       margin-bottom: 14px;
+      transition: transform 0.18s ease;
     }
 
     .reviews-box {
-      border-top: 1px solid #eee;
+      border-top: 1px solid #ebf0f7;
       padding-top: 14px;
       cursor: default;
     }
 
     .review-form {
       margin-bottom: 16px;
-    }
-
-    .review-form label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: #333;
     }
 
     .stars {
@@ -607,26 +777,22 @@ import { CartService } from '../../services/cart';
     }
 
     .star-btn {
-      background: transparent !important;
-      color: #bbb !important;
+      background: transparent;
+      color: #c9d2df;
       font-size: 28px;
-      padding: 0 !important;
+      padding: 0;
       border: none;
-      width: auto !important;
+      width: auto;
+      cursor: pointer;
     }
 
     .star-btn.active {
-      color: #ff8a3d !important;
+      color: #ffb020;
     }
 
     textarea {
       width: 100%;
       box-sizing: border-box;
-      padding: 12px 14px;
-      border: 1px solid #d8d8d8;
-      border-radius: 12px;
-      font-size: 15px;
-      font-family: Arial, sans-serif;
       resize: vertical;
       margin-bottom: 12px;
     }
@@ -637,8 +803,9 @@ import { CartService } from '../../services/cart';
     }
 
     .review-item {
-      background: #f8f8f8;
-      border-radius: 12px;
+      background: #f8fbff;
+      border: 1px solid #e5edf8;
+      border-radius: 14px;
       padding: 12px;
     }
 
@@ -649,16 +816,55 @@ import { CartService } from '../../services/cart';
       margin-bottom: 6px;
     }
 
+    .review-head strong {
+      color: #1b2940;
+    }
+
     .empty-reviews {
-      color: #777;
+      color: #73839a;
       font-size: 14px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        padding: 24px 18px;
+      }
+
+      .hero {
+        flex-direction: column;
+        align-items: start;
+      }
+
+      h1 {
+        font-size: 42px;
+        line-height: 1;
+        letter-spacing: -1px;
+      }
+
+      .hero__actions {
+        width: 100%;
+      }
+
+      .hero__actions button {
+        flex: 1 1 auto;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .filters-box {
+        grid-template-columns: 1fr;
+      }
     }
   `]
 })
-export class MenuComponent implements OnInit {
-  products: any[] = [];
-  categories: any[] = [];
+export class MenuComponent implements OnInit, OnDestroy {
+  products: Product[] = [];
+  categories: Category[] = [];
   branchId = 0;
+  branchName = 'Филиал';
   loading = true;
   errorMessage = '';
   successMessage = '';
@@ -672,9 +878,13 @@ export class MenuComponent implements OnInit {
   selectedCategory = '';
   sortBy = '';
 
-  starOptions = [1, 2, 3, 4, 5];
-  role = localStorage.getItem('role') || 'buyer';
-  username = localStorage.getItem('username') || '';
+  readonly starOptions = [1, 2, 3, 4, 5];
+  readonly fallbackImage = 'https://picsum.photos/seed/noimage/600/400';
+
+  readonly role = localStorage.getItem('role') || 'buyer';
+  readonly username = localStorage.getItem('username') || '';
+
+  private successTimer?: number;
 
   constructor(
     private cartService: CartService,
@@ -701,31 +911,30 @@ export class MenuComponent implements OnInit {
     this.loadAll();
   }
 
-  async loadAll() {
+  ngOnDestroy(): void {
+    if (this.successTimer) {
+      window.clearTimeout(this.successTimer);
+    }
+  }
+
+  trackByProduct = (_: number, item: Product) => item.id;
+  trackByCategory = (_: number, item: Category) => item.id;
+
+  async loadAll(): Promise<void> {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || '';
 
       const [productsResponse, categoriesResponse, favoritesResponse] = await Promise.all([
         fetch('http://127.0.0.1:8000/api/products/?branch=' + this.branchId),
         fetch('http://127.0.0.1:8000/api/categories/'),
         fetch('http://127.0.0.1:8000/api/favorites/', {
-          headers: {
-            'Authorization': 'Bearer ' + token
-          }
+          headers: { 'Authorization': 'Bearer ' + token }
         })
       ]);
 
-      if (!productsResponse.ok) {
-        throw new Error('Не удалось загрузить меню');
-      }
-
-      if (!categoriesResponse.ok) {
-        throw new Error('Не удалось загрузить категории');
-      }
-
-      if (!favoritesResponse.ok) {
-        throw new Error('Не удалось загрузить избранное');
-      }
+      if (!productsResponse.ok) throw new Error('Не удалось загрузить меню');
+      if (!categoriesResponse.ok) throw new Error('Не удалось загрузить категории');
+      if (!favoritesResponse.ok) throw new Error('Не удалось загрузить избранное');
 
       const productsData = await productsResponse.json();
       const categoriesData = await categoriesResponse.json();
@@ -737,19 +946,20 @@ export class MenuComponent implements OnInit {
         Array.isArray(favoritesData) ? favoritesData.map((item: any) => Number(item.id)) : []
       );
 
+      if (this.products.length > 0) {
+        this.branchName = this.products[0].branch_name || ('Филиал #' + this.branchId);
+      } else {
+        this.branchName = 'Филиал #' + this.branchId;
+      }
+
       for (const product of this.products) {
-        const myReview = (product.reviews || []).find((review: any) => review.user_name === this.username);
-        if (myReview) {
-          this.reviewDrafts[product.id] = {
-            rating: myReview.rating,
-            comment: myReview.comment || ''
-          };
-        } else if (!this.reviewDrafts[product.id]) {
-          this.reviewDrafts[product.id] = {
-            rating: 0,
-            comment: ''
-          };
-        }
+        const myReview = (product.reviews || []).find(
+          (review) => review.user_name === this.username
+        );
+
+        this.reviewDrafts[product.id] = myReview
+          ? { rating: myReview.rating, comment: myReview.comment || '' }
+          : { rating: 0, comment: '' };
       }
 
       this.loading = false;
@@ -762,18 +972,20 @@ export class MenuComponent implements OnInit {
     }
   }
 
-  get filteredProducts(): any[] {
+  get filteredProducts(): Product[] {
     let result = [...this.products];
 
     const term = this.searchTerm.trim().toLowerCase();
     if (term) {
-      result = result.filter(product =>
+      result = result.filter((product) =>
         String(product.name || '').toLowerCase().includes(term)
       );
     }
 
     if (this.selectedCategory) {
-      result = result.filter(product => String(product.category) === String(this.selectedCategory));
+      result = result.filter(
+        (product) => String(product.category) === String(this.selectedCategory)
+      );
     }
 
     switch (this.sortBy) {
@@ -797,17 +1009,17 @@ export class MenuComponent implements OnInit {
     return result;
   }
 
-  getSimilarProducts(product: any): any[] {
+  getSimilarProducts(product: Product): Product[] {
     return this.products
-      .filter(item =>
-        Number(item.id) !== Number(product.id) &&
+      .filter((item) =>
+        item.id !== product.id &&
         Number(item.category) === Number(product.category) &&
         Number(item.branch) === Number(product.branch)
       )
       .slice(0, 3);
   }
 
-  async toggleFavorite(productId: number, event: Event) {
+  async toggleFavorite(productId: number, event: Event): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
 
@@ -822,9 +1034,7 @@ export class MenuComponent implements OnInit {
 
       const response = await fetch('http://127.0.0.1:8000/api/favorites/' + productId + '/', {
         method: isNowFavorite ? 'DELETE' : 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
+        headers: { 'Authorization': 'Bearer ' + token }
       });
 
       if (!response.ok) {
@@ -833,10 +1043,10 @@ export class MenuComponent implements OnInit {
 
       if (isNowFavorite) {
         this.favoriteIds.delete(productId);
-        this.successMessage = 'Убрано из избранного';
+        this.showSuccess('Убрано из избранного');
       } else {
         this.favoriteIds.add(productId);
-        this.successMessage = 'Добавлено в избранное ❤️';
+        this.showSuccess('Добавлено в избранное');
       }
 
       this.errorMessage = '';
@@ -852,18 +1062,18 @@ export class MenuComponent implements OnInit {
     return this.favoriteIds.has(Number(productId));
   }
 
-  clearFilters() {
+  clearFilters(): void {
     this.searchTerm = '';
     this.selectedCategory = '';
     this.sortBy = '';
   }
 
   getCategoryName(categoryId: number): string {
-    const category = this.categories.find((item: any) => Number(item.id) === Number(categoryId));
+    const category = this.categories.find((item) => Number(item.id) === Number(categoryId));
     return category ? category.name : 'Без категории';
   }
 
-  formatRating(value: number): string {
+  formatRating(value?: number): string {
     return Number(value || 0).toFixed(1);
   }
 
@@ -871,93 +1081,97 @@ export class MenuComponent implements OnInit {
     return this.imageIndexes[productId] || 0;
   }
 
-  prevImage(productId: number, total: number, event: Event) {
+  prevImage(productId: number, total: number, event: Event): void {
     event.stopPropagation();
     const current = this.getImageIndex(productId);
     this.imageIndexes[productId] = current === 0 ? total - 1 : current - 1;
     this.cdr.detectChanges();
   }
 
-  nextImage(productId: number, total: number, event: Event) {
+  nextImage(productId: number, total: number, event: Event): void {
     event.stopPropagation();
     const current = this.getImageIndex(productId);
     this.imageIndexes[productId] = current === total - 1 ? 0 : current + 1;
     this.cdr.detectChanges();
   }
 
-  openProduct(productId: number) {
+  openProduct(productId: number): void {
     this.router.navigate(['/product', productId]);
   }
 
-  addToCart(item: any, event?: Event) {
+  addToCart(item: Product, event?: Event): void {
     event?.stopPropagation();
 
     if (item.is_available === false) return;
 
-    this.cartService.addItem(item);
-    this.successMessage = item.name + ' добавлен в корзину';
+    this.cartService.addItem(item as any);
+    this.showSuccess(item.name + ' добавлен в корзину');
     this.cdr.detectChanges();
   }
 
-  increaseQty(productId: number, event?: Event) {
+  increaseQty(productId: number, event?: Event): void {
     event?.stopPropagation();
     this.cartService.increaseItem(productId);
     this.cdr.detectChanges();
   }
 
-  decreaseQty(productId: number, event?: Event) {
+  decreaseQty(productId: number, event?: Event): void {
     event?.stopPropagation();
     this.cartService.decreaseItem(productId);
     this.cdr.detectChanges();
   }
 
-  getCartCount() {
+  getCartCount(): number {
     return this.cartService.getTotalCount();
   }
 
-  getItemCount(productId: number) {
+  getItemCount(productId: number): number {
     return this.cartService.getItemCount(productId);
   }
 
-  toggleReviews(productId: number, event?: Event) {
+  toggleReviews(productId: number, event?: Event): void {
     event?.stopPropagation();
     this.openReviews[productId] = !this.openReviews[productId];
+
     if (!this.reviewDrafts[productId]) {
       this.reviewDrafts[productId] = { rating: 0, comment: '' };
     }
+
     this.cdr.detectChanges();
   }
 
-  isReviewsOpen(productId: number) {
+  isReviewsOpen(productId: number): boolean {
     return !!this.openReviews[productId];
   }
 
-  setRating(productId: number, rating: number, event: Event) {
+  setRating(productId: number, rating: number, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
+
     if (!this.reviewDrafts[productId]) {
       this.reviewDrafts[productId] = { rating: 0, comment: '' };
     }
+
     this.reviewDrafts[productId].rating = rating;
     this.cdr.detectChanges();
   }
 
-  getSelectedRating(productId: number) {
+  getSelectedRating(productId: number): number {
     return this.reviewDrafts[productId]?.rating || 0;
   }
 
-  getReviewComment(productId: number) {
+  getReviewComment(productId: number): string {
     return this.reviewDrafts[productId]?.comment || '';
   }
 
-  setReviewComment(productId: number, value: string) {
+  setReviewComment(productId: number, value: string): void {
     if (!this.reviewDrafts[productId]) {
       this.reviewDrafts[productId] = { rating: 0, comment: '' };
     }
     this.reviewDrafts[productId].comment = value;
   }
 
-  async submitReview(productId: number) {
+  async submitReview(productId: number): Promise<void> {
     const draft = this.reviewDrafts[productId];
 
     if (!draft || !draft.rating) {
@@ -968,24 +1182,26 @@ export class MenuComponent implements OnInit {
     }
 
     const token = localStorage.getItem('token');
-
     if (!token) {
       this.router.navigate(['/login']);
       return;
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/products/' + productId + '/reviews/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          rating: draft.rating,
-          comment: draft.comment
-        })
-      });
+      const response = await fetch(
+        'http://127.0.0.1:8000/api/products/' + productId + '/reviews/',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            rating: draft.rating,
+            comment: draft.comment
+          })
+        }
+      );
 
       const result = await response.json().catch(() => ({}));
 
@@ -999,8 +1215,8 @@ export class MenuComponent implements OnInit {
         throw new Error(result.error || 'Не удалось сохранить отзыв');
       }
 
-      this.successMessage = 'Отзыв сохранён.';
       this.errorMessage = '';
+      this.showSuccess('Отзыв сохранён');
       await this.loadAll();
     } catch (error) {
       this.successMessage = '';
@@ -1009,24 +1225,37 @@ export class MenuComponent implements OnInit {
     }
   }
 
-  openFavorites() {
+  openFavorites(): void {
     this.router.navigate(['/favorites']);
   }
 
-  openCart() {
+  openCart(): void {
     this.router.navigate(['/cart']);
   }
 
-  openOrders() {
+  openOrders(): void {
     this.router.navigate(['/orders']);
   }
 
-  goBack() {
+  goBack(): void {
     this.router.navigate(['/branches']);
   }
 
-  logout() {
+  logout(): void {
     localStorage.clear();
     this.router.navigate(['/login']);
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage = message;
+
+    if (this.successTimer) {
+      window.clearTimeout(this.successTimer);
+    }
+
+    this.successTimer = window.setTimeout(() => {
+      this.successMessage = '';
+      this.cdr.detectChanges();
+    }, 2200);
   }
 }

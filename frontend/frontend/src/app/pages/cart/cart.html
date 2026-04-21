@@ -1,56 +1,118 @@
 <section class="cart-page">
   <div class="cart-page__header">
-    <div>
+    <div class="cart-page__intro">
       <span class="badge">Корзина</span>
       <h1>Проверь заказ перед отправкой</h1>
+      <p>Позиции из меню уже здесь — осталось указать адрес и оформить заказ.</p>
     </div>
+
     <a routerLink="/branches" class="secondary-link">Вернуться к филиалам</a>
   </div>
 
-  @if (cart.length === 0) {
-    <div class="empty-card">
-      <h2>Корзина пока пустая</h2>
-      <p>Добавь позиции из меню, и они появятся здесь.</p>
+  <div class="empty-card" *ngIf="cart.length === 0">
+    <div class="empty-card__icon">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M3 5h2l1.2 7.2A2 2 0 0 0 8.2 14H17a2 2 0 0 0 1.9-1.4L21 7H7"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <circle cx="9" cy="19" r="1.6" fill="currentColor"></circle>
+        <circle cx="17" cy="19" r="1.6" fill="currentColor"></circle>
+      </svg>
     </div>
-  } @else {
-    <div class="cart-layout">
-      <div class="cart-list">
-        @for (item of cart; track $index) {
-          <article class="cart-item">
+
+    <h2>Корзина пока пустая</h2>
+    <p>Добавь позиции из меню, и они сразу появятся здесь.</p>
+
+    <div class="empty-card__chips">
+      <span>Бургеры</span>
+      <span>Напитки</span>
+      <span>Сэндвичи</span>
+    </div>
+
+    <a routerLink="/branches" class="empty-card__link">Перейти к филиалам</a>
+  </div>
+
+  <div *ngIf="cart.length > 0" class="cart-layout">
+    <div class="cart-list">
+      <article class="cart-item" *ngFor="let item of cart">
+        <div class="cart-item__media">
+          <ng-container *ngIf="item.images?.[0]?.image_url as imageUrl; else noImageTpl">
+            <img
+              [src]="imageUrl"
+              [alt]="item.name"
+              class="cart-item__image"
+            />
+          </ng-container>
+
+          <ng-template #noImageTpl>
+            <div class="cart-item__placeholder">Нет фото</div>
+          </ng-template>
+        </div>
+
+        <div class="cart-item__main">
+          <div class="cart-item__top">
             <div>
               <h3>{{ item.name }}</h3>
               <p>{{ item.description }}</p>
             </div>
-            <div class="cart-item__right">
+
+            <div class="cart-item__price-block">
               <strong>{{ item.price }} ₸</strong>
-              <button (click)="removeItem($index)">Удалить</button>
+              <span>{{ getItemSubtotal(item) }} ₸</span>
             </div>
-          </article>
-        }
-      </div>
+          </div>
 
-      <aside class="checkout-card">
-        <h2>Оформление</h2>
+          <div class="cart-item__bottom">
+            <div class="qty-box">
+              <button class="qty-btn" (click)="decreaseQty(item.id)">−</button>
+              <span class="qty-value">{{ item.quantity }}</span>
+              <button class="qty-btn" (click)="increaseQty(item.id)">+</button>
+            </div>
 
-        <label class="field">
-          <span>Адрес</span>
-          <input [(ngModel)]="address" placeholder="Куда доставить заказ" />
-        </label>
+            <button class="remove" (click)="removeItem(item.id)">Удалить</button>
+          </div>
+        </div>
+      </article>
+    </div>
 
-        <label class="field">
-          <span>Комментарий</span>
-          <textarea [(ngModel)]="comment" rows="4" placeholder="Например: позвонить за 5 минут"></textarea>
-        </label>
+    <aside class="checkout-card">
+      <h2>Оформление</h2>
+
+      <label class="field">
+        <span>Адрес доставки</span>
+        <input [(ngModel)]="address" placeholder="Куда доставить заказ" />
+      </label>
+
+      <label class="field">
+        <span>Комментарий</span>
+        <textarea
+          [(ngModel)]="comment"
+          rows="4"
+          placeholder="Например: позвонить за 5 минут"
+        ></textarea>
+      </label>
+
+      <div class="checkout-summary">
+        <div class="checkout-row">
+          <span>Товаров</span>
+          <strong>{{ getTotalCount() }}</strong>
+        </div>
 
         <div class="checkout-row">
           <span>Итого</span>
-          <strong>{{ getTotalPrice() }} ₸</strong>
+          <strong class="checkout-total">{{ getTotalPrice() }} ₸</strong>
         </div>
+      </div>
 
-        <button class="primary-button" (click)="placeOrder()" [disabled]="loading">
-          {{ loading ? 'Отправляю...' : 'Отправить заказ' }}
-        </button>
-      </aside>
-    </div>
-  }
+      <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <button class="primary-button" (click)="placeOrder()" [disabled]="loading">
+        {{ loading ? 'Отправляю...' : 'Отправить заказ' }}
+      </button>
+    </aside>
+  </div>
 </section>

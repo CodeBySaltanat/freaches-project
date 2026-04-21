@@ -1,10 +1,11 @@
 <section class="menu-page">
   <div class="menu-page__header">
-    <div>
+    <div class="menu-page__intro">
       <span class="badge">{{ branchName }}</span>
       <h1>Меню филиала</h1>
       <p>Выбирай позиции, добавляй их в корзину и затем оформляй заказ.</p>
     </div>
+
     <a routerLink="/cart" class="secondary-link">Перейти в корзину</a>
   </div>
 
@@ -17,13 +18,21 @@
   } @else {
     @for (category of categories; track category.name) {
       <section class="category-block">
-        <h2>{{ category.name }}</h2>
+        <div class="category-block__header">
+          <h2>{{ category.name }}</h2>
+        </div>
+
         <div class="product-grid">
           @for (item of category.items; track item.id) {
             <article class="product-card">
+              <div class="product-card__top">
+                <div class="product-card__icon"></div>
+              </div>
+
               <div class="product-card__body">
                 <h3>{{ item.name }}</h3>
                 <p>{{ item.description }}</p>
+
                 <div class="product-card__footer">
                   <strong>{{ item.price }} ₸</strong>
                   <button (click)="addToCart(item)">В корзину</button>

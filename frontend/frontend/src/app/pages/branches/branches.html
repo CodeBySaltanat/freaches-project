@@ -1,9 +1,17 @@
 <section class="branches-page">
   <div class="branches-header">
-    <div>
+    <div class="branches-copy">
       <span class="badge">Режим покупателя</span>
-      <h1>Выберите филиал</h1>
-      <p>Сначала выбирай филиал, потом открывай меню именно этого филиала.</p>
+      <h1>Филиалы Freaches</h1>
+      <p>Выбери филиал, чтобы открыть его меню и оформить заказ.</p>
+    </div>
+
+    <div class="branches-actions">
+      <button (click)="openCart()">Корзина ({{ getCartCount() }})</button>
+      <button (click)="openFavorites()">Избранное</button>
+      <button (click)="openOrders()">Мои заказы</button>
+      <button (click)="openProfile()">Профиль</button>
+      <button class="ghost" (click)="logout()">Выйти</button>
     </div>
   </div>
 
@@ -17,11 +25,71 @@
     <div class="branches-grid">
       @for (branch of branches; track branch.id) {
         <article class="branch-card">
-          <h3>{{ branch.name }}</h3>
-          <p>{{ branch.address }}</p>
-          <button (click)="openBranch(branch)">Открыть меню</button>
+          <div class="branch-card__top">
+            <div class="branch-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linejoin="round"
+                />
+                <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.8" />
+              </svg>
+            </div>
+
+            <div class="branch-card__info">
+              <h3>{{ branch.name }}</h3>
+              <p>{{ branch.address }}</p>
+              <div class="branch-card__meta">
+                <span>Открыто для заказа</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="branch-card__bottom">
+            <button (click)="openBranch(branch)">Открыть меню</button>
+          </div>
         </article>
       }
     </div>
   }
+
+  <div class="coming-soon">
+    <h2>Скоро откроем новые филиалы</h2>
+
+    <div class="coming-grid">
+      <div class="coming-card">
+        <div class="coming-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+            <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.8" />
+          </svg>
+        </div>
+        <strong>TB1</strong>
+        <span>Tole bi 1 floor</span>
+      </div>
+
+      <div class="coming-card">
+        <div class="coming-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+            <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.8" />
+          </svg>
+        </div>
+        <strong>TB2</strong>
+        <span>Tole bi 2 floor</span>
+      </div>
+    </div>
+  </div>
 </section>

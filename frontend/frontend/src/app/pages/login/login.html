@@ -10,8 +10,21 @@
 
   <div class="auth-card">
     <div class="tabs">
-      <button type="button" [class.active]="mode === 'login'" (click)="switchMode('login')">Вход</button>
-      <button type="button" [class.active]="mode === 'register'" (click)="switchMode('register')">Регистрация</button>
+      <button
+        type="button"
+        [class.active]="mode === 'login'"
+        (click)="switchMode('login')"
+      >
+        Вход
+      </button>
+
+      <button
+        type="button"
+        [class.active]="mode === 'register'"
+        (click)="switchMode('register')"
+      >
+        Регистрация
+      </button>
     </div>
 
     <h2>{{ mode === 'login' ? 'Добро пожаловать' : 'Создание аккаунта' }}</h2>
@@ -21,29 +34,43 @@
 
     <div class="field">
       <label>Логин</label>
-      <input [(ngModel)]="username" placeholder="Например, saltanat">
+      <input [(ngModel)]="username" placeholder="Например, saltanat" />
     </div>
 
     <div class="field">
       <label>Пароль</label>
-      <input [(ngModel)]="password" type="password" placeholder="Минимум 6 символов">
+      <input
+        [(ngModel)]="password"
+        type="password"
+        placeholder="Минимум 6 символов"
+      />
     </div>
 
     <div *ngIf="mode === 'register'">
       <div class="field">
         <label>Подтверждение пароля</label>
-        <input [(ngModel)]="confirmPassword" type="password" placeholder="Повтори пароль">
+        <input
+          [(ngModel)]="confirmPassword"
+          type="password"
+          placeholder="Повтори пароль"
+        />
       </div>
 
       <div class="role-picker">
-        <button type="button" [class.selected]="role === 'buyer'" (click)="role = 'buyer'">
-          <span>🛍️</span>
-          <strong>Покупатель</strong>
+        <button
+          type="button"
+          [class.selected]="role === 'buyer'"
+          (click)="role = 'buyer'"
+        >
+          Покупатель
         </button>
 
-        <button type="button" [class.selected]="role === 'producer'" (click)="role = 'producer'">
-          <span>🏪</span>
-          <strong>Производитель</strong>
+        <button
+          type="button"
+          [class.selected]="role === 'producer'"
+          (click)="role = 'producer'"
+        >
+          Производитель
         </button>
       </div>
     </div>
