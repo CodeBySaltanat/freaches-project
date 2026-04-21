@@ -889,26 +889,26 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     const name = String(item.name || '').toLowerCase();
 
     if (name.includes('chicken sandwich')) {
-      return 'assets/products/chicken-sandwich.jpg';
+      return './assets/products/chicken-sandwich.jpg';
     }
 
     if (name.includes('beef sandwich')) {
-      return 'assets/products/beef-sandwich.jpg';
+      return './assets/products/beef-sandwich.jpg';
     }
 
     if (name.includes('beef burger')) {
-      return 'assets/products/beef-burger.jpg';
+      return './assets/products/beef-burger.jpg';
     }
 
     if (name.includes('burger')) {
-      return 'assets/products/beef-burger.jpg';
+      return './assets/products/beef-burger.jpg';
     }
 
     if (name.includes('sandwich')) {
-      return 'assets/products/beef-sandwich.jpg';
+      return './assets/products/beef-sandwich.jpg';
     }
 
-    return 'assets/products/default-food.jpg';
+    return './assets/products/default-food.jpg';
   }
 
   prevMainImage(event: Event): void {

@@ -3,3 +3,5 @@ __pycache__/
 .DS_Store
 backend/db.sqlite3
 .vscode/
+.postman
+postman
