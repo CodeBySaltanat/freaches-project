@@ -11,62 +11,55 @@
     </div>
   </div>
 
-  @if (loading) {
-    <div class="state-card">Загружаю заказы...</div>
-  } @else if (errorMessage) {
-    <div class="state-card state-card--error">{{ errorMessage }}</div>
-  } @else if (!orders.length) {
-    <div class="state-card">Пока заказов нет.</div>
-  } @else {
-    <div class="orders-grid">
-      @for (order of orders; track order.id) {
-        <article class="order-card">
-          <div class="order-card__top">
-            <div>
-              <h2>Заказ #{{ order.id }}</h2>
-              <p class="muted">{{ order.created_at | date:'dd.MM.yyyy, HH:mm' }}</p>
-            </div>
-            <span class="status-chip" [attr.data-status]="order.status">{{ order.status_label }}</span>
-          </div>
+  <div class="state-card" *ngIf="loading">Загружаю заказы...</div>
+  <div class="state-card state-card--error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="state-card" *ngIf="!loading && !errorMessage && !orders.length">
+    Пока заказов нет.
+  </div>
 
-          @if (role === 'producer') {
-            <p><strong>Клиент:</strong> {{ order.username }}</p>
-          }
+  <div class="orders-grid" *ngIf="!loading && !errorMessage && orders.length">
+    <article class="order-card" *ngFor="let order of orders">
+      <div class="order-card__top">
+        <div>
+          <h2>Заказ #{{ order.id }}</h2>
+          <p class="muted">{{ order.created_at | date:'dd.MM.yyyy, HH:mm' }}</p>
+        </div>
+        <span class="status-chip" [attr.data-status]="order.status">
+          {{ getStatusLabel(order.status) }}
+        </span>
+      </div>
 
-          <p><strong>Адрес:</strong> {{ order.address }}</p>
+      <div *ngIf="role === 'producer'">
+        <p><strong>Клиент:</strong> {{ order.username }}</p>
+      </div>
 
-          @if (order.comment) {
-            <p><strong>Комментарий:</strong> {{ order.comment }}</p>
-          }
+      <p><strong>Адрес:</strong> {{ order.address }}</p>
 
-          <p><strong>Сумма:</strong> {{ order.total_amount }} ₸</p>
+      <div *ngIf="order.comment">
+        <p><strong>Комментарий:</strong> {{ order.comment }}</p>
+      </div>
 
-          <div class="items-block">
-            <h3>Состав заказа</h3>
-            <ul>
-              @for (item of order.items; track item.id) {
-                <li>{{ item.product_name }} × {{ item.quantity }} — {{ item.line_total }} ₸</li>
-              }
-            </ul>
-          </div>
+      <p><strong>Сумма:</strong> {{ order.total_amount }} ₸</p>
 
-          @if (role === 'producer') {
-            <div class="actions-row">
-              @for (action of getProducerActions(order); track action.value) {
-                <button [class.danger]="action.type === 'danger'" (click)="updateStatus(order.id, action.value)">
-                  {{ action.label }}
-                </button>
-              }
-            </div>
-          }
+      <div class="items-block">
+        <h3>Состав заказа</h3>
+        <ul>
+          <li *ngFor="let item of order.items">
+            {{ item.product_name }} × {{ item.quantity }} — {{ item.line_total }} ₸
+          </li>
+        </ul>
+      </div>
 
-          @if (role === 'buyer' && order.status === 'ready') {
-            <div class="actions-row">
-              <button (click)="updateStatus(order.id, 'completed')">Подтвердить получение</button>
-            </div>
-          }
-        </article>
-      }
-    </div>
-  }
+      <div class="actions-row">
+        <button *ngIf="role === 'producer'" [class.danger]="order.status === 'out_of_stock'"
+          (click)="updateStatus(order.id, 'accepted')">
+          {{ order.status === 'pending' ? 'Принять' : 'Изменить статус' }}
+        </button>
+
+        <button *ngIf="role === 'buyer' && order.status === 'ready'" (click)="updateStatus(order.id, 'completed')">
+          Подтвердить получение
+        </button>
+      </div>
+    </article>
+  </div>
 </section>

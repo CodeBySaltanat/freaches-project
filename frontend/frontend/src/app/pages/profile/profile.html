@@ -1,21 +1,110 @@
 <section class="profile-page">
-  @if (loading) {
-    <div class="profile-card">Загружаю профиль...</div>
-  } @else {
-    <div class="profile-card">
-      <div class="profile-avatar">👤</div>
-      <h1>{{ profile?.username || 'Пользователь' }}</h1>
-      <p class="role-label">{{ profile?.role_label || 'Пользователь' }}</p>
-      <p class="profile-description">
-        {{ profile?.role === 'producer'
-          ? 'После входа тебе доступен экран обработки заказов.'
-          : 'После входа тебе доступны филиалы, меню, корзина и экран отслеживания заказов.' }}
+  <div class="profile-hero">
+    <div class="profile-hero__text">
+      <span class="badge">{{ role === 'producer' ? 'Режим производителя' : 'Режим покупателя' }}</span>
+      <h1>Профиль</h1>
+      <p>
+        Управляй своими данными, адресами и смотри последние заказы в одном месте.
       </p>
+    </div>
 
-      <div class="profile-actions">
-        <a [routerLink]="profile?.role === 'producer' ? '/orders' : '/branches'">Открыть рабочий экран</a>
-        <button (click)="logout()">Выйти</button>
-      </div>
+    <div class="profile-hero__actions">
+      <button *ngIf="role === 'buyer'" class="ghost-btn" (click)="openCart()">
+        Корзина ({{ getCartCount() }})
+      </button>
+      <button class="ghost-btn" (click)="goBack()">Назад</button>
+      <button class="dark-btn" (click)="logout()">Выйти</button>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="state-card">Загружаю профиль...</div>
+  } @else {
+    @if (errorMessage) {
+      <div class="state-card state-card--error">{{ errorMessage }}</div>
+    }
+
+    @if (successMessage) {
+      <div class="state-card state-card--success">{{ successMessage }}</div>
+    }
+
+    <div class="profile-layout" *ngIf="profile">
+      <article class="profile-card profile-card--main">
+        <div class="profile-head">
+          <div class="profile-avatar">{{ getAvatarText() }}</div>
+
+          <div class="profile-head__info">
+            <h2>{{ profile?.username || 'Пользователь' }}</h2>
+            <p class="role-label">{{ profile?.role_label || 'Пользователь' }}</p>
+          </div>
+        </div>
+
+        <div class="profile-fields">
+          <label class="field">
+            <span>Логин</span>
+            <input [value]="profile.username" disabled />
+          </label>
+
+          <label class="field">
+            <span>Роль</span>
+            <input [value]="profile.role_label" disabled />
+          </label>
+
+          <label class="field">
+            <span>Имя</span>
+            <input [(ngModel)]="fullName" placeholder="Например, Saltanat" />
+          </label>
+
+          <label class="field">
+            <span>Телефон</span>
+            <input [(ngModel)]="phone" placeholder="+7 777 123 45 67" />
+          </label>
+        </div>
+
+        <div class="addresses-block">
+          <div class="section-title">Сохранённые адреса</div>
+
+          <div class="address-add">
+            <input [(ngModel)]="newAddress" placeholder="Добавить новый адрес" />
+            <button (click)="addAddress()">Добавить</button>
+          </div>
+
+          <div class="addresses" *ngIf="savedAddresses.length > 0; else emptyAddressTpl">
+            <div class="address-item" *ngFor="let address of savedAddresses; let i = index">
+              <span>{{ address }}</span>
+              <button class="danger-btn" (click)="removeAddress(i)">Удалить</button>
+            </div>
+          </div>
+
+          <ng-template #emptyAddressTpl>
+            <div class="empty-note">Пока нет сохранённых адресов.</div>
+          </ng-template>
+        </div>
+
+        <button class="save-btn" (click)="saveProfile()">Сохранить профиль</button>
+      </article>
+
+      <article class="profile-card">
+        <div class="section-title">Последние заказы</div>
+
+        <div class="orders-list" *ngIf="recentOrders.length > 0; else emptyOrdersTpl">
+          <div class="order-item" *ngFor="let order of recentOrders">
+            <div class="order-top">
+              <strong>Заказ #{{ order.buyer_order_number || order.id }}</strong>
+              <span class="status-chip" [ngClass]="getStatusClass(order.status)">
+                {{ getStatusLabel(order.status) }}
+              </span>
+            </div>
+
+            <div class="order-date">{{ formatDate(order.created_at) }}</div>
+            <div class="order-total">Итого: {{ order.total }} ₸</div>
+          </div>
+        </div>
+
+        <ng-template #emptyOrdersTpl>
+          <div class="empty-note">Пока заказов нет.</div>
+        </ng-template>
+      </article>
     </div>
   }
 </section>
