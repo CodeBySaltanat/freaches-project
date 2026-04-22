@@ -1,0 +1,968 @@
+{
+  "info": {
+    "name": "Freaches API Collection",
+    "_postman_id": "freaches-api-collection-2026",
+    "description": "Postman collection for the Freaches Angular + Django project.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "branch_id",
+      "value": "1"
+    },
+    {
+      "key": "product_id",
+      "value": "1"
+    },
+    {
+      "key": "order_id",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"buyer1\",\n  \"password\": \"123456\",\n  \"role\": \"buyer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/register/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "register",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Register example",
+              "originalRequest": {
+                "method": "POST"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"message\": \"Пользователь успешно зарегистрирован\",\n  \"user\": {\n    \"id\": 5,\n    \"username\": \"buyer1\",\n    \"role\": \"buyer\",\n    \"role_label\": \"Покупатель\",\n    \"full_name\": \"\",\n    \"phone\": \"\",\n    \"saved_addresses\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"buyer1\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Login example",
+              "originalRequest": {
+                "method": "POST"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"refresh\": \"<refresh_token>\",\n  \"access\": \"<access_token>\",\n  \"user\": {\n    \"id\": 5,\n    \"username\": \"buyer1\",\n    \"role\": \"buyer\",\n    \"role_label\": \"Покупатель\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/logout/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logout",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Logout example",
+              "originalRequest": {
+                "method": "POST"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Logout successful\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "Get branches",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/branches/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "branches",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Branches example",
+              "originalRequest": {
+                "method": "GET"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"KBTU Branch\",\n    \"address\": \"Tole bi 59\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/categories/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Categories example",
+              "originalRequest": {
+                "method": "GET"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Sandwiches\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/products/?branch={{branch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "branch",
+                  "value": "{{branch_id}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Products example",
+              "originalRequest": {
+                "method": "GET"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Chicken Panini\",\n    \"price\": 2500,\n    \"description\": \"Hot sandwich\",\n    \"category\": 1,\n    \"branch\": 1,\n    \"is_available\": true,\n    \"images\": [],\n    \"reviews\": [],\n    \"avg_rating\": 0.0,\n    \"reviews_count\": 0\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get product detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "{{product_id}}",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Product detail example",
+              "originalRequest": {
+                "method": "GET"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Chicken Panini\",\n  \"price\": 2500,\n  \"description\": \"Hot sandwich\",\n  \"category\": 1,\n  \"branch\": 1,\n  \"is_available\": true,\n  \"images\": [],\n  \"reviews\": [],\n  \"avg_rating\": 0.0,\n  \"reviews_count\": 0\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Buyer",
+      "item": [
+        {
+          "name": "Get favorites",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/favorites/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "favorites",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Favorites example",
+              "originalRequest": {
+                "method": "GET"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[]"
+            }
+          ]
+        },
+        {
+          "name": "Add favorite",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/favorites/{{product_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "favorites",
+                "{{product_id}}",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Add favorite example",
+              "originalRequest": {
+                "method": "POST"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"message\": \"Добавлено в избранное\",\n  \"created\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete favorite",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/favorites/{{product_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "favorites",
+                "{{product_id}}",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Delete favorite example",
+              "originalRequest": {
+                "method": "DELETE"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Удалено из избранного\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"KBTU dormitory\",\n  \"comment\": \"Call me\",\n  \"items\": [\n    {\n      \"product\": 1,\n      \"quantity\": 2\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Create order example",
+              "originalRequest": {
+                "method": "POST"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 10,\n  \"buyer_order_number\": 3,\n  \"user\": 5,\n  \"user_name\": \"buyer1\",\n  \"created_at\": \"2026-04-22T10:00:00Z\",\n  \"status\": \"pending\",\n  \"address\": \"KBTU dormitory\",\n  \"comment\": \"Call me\",\n  \"items\": [\n    {\n      \"id\": 1,\n      \"product\": 1,\n      \"product_name\": \"Chicken Panini\",\n      \"quantity\": 2\n    }\n  ],\n  \"total\": 5000\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get my orders",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/orders/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Orders example",
+              "originalRequest": {
+                "method": "GET"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[]"
+            }
+          ]
+        },
+        {
+          "name": "Delete my order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Delete order example",
+              "originalRequest": {
+                "method": "DELETE"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Заказ удалён\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create or update review",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Very tasty\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}/reviews/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "{{product_id}}",
+                "reviews",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Review example",
+              "originalRequest": {
+                "method": "POST"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 1,\n  \"user\": 5,\n  \"user_name\": \"buyer1\",\n  \"rating\": 5,\n  \"comment\": \"Very tasty\",\n  \"created_at\": \"2026-04-22T10:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/profile/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Profile example",
+              "originalRequest": {
+                "method": "GET"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 5,\n  \"username\": \"buyer1\",\n  \"role\": \"buyer\",\n  \"role_label\": \"Покупатель\",\n  \"full_name\": \"\",\n  \"phone\": \"\",\n  \"saved_addresses\": [],\n  \"recent_orders\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Buyer User\",\n  \"phone\": \"+77000000000\",\n  \"saved_addresses\": [\n    \"KBTU\",\n    \"Home\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Profile update example",
+              "originalRequest": {
+                "method": "PUT"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 5,\n  \"username\": \"buyer1\",\n  \"role\": \"buyer\",\n  \"role_label\": \"Покупатель\",\n  \"full_name\": \"Buyer User\",\n  \"phone\": \"+77000000000\",\n  \"saved_addresses\": [\n    \"KBTU\",\n    \"Home\"\n  ],\n  \"recent_orders\": []\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Producer",
+      "item": [
+        {
+          "name": "Get producer products",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/manage-products/?branch={{branch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manage-products",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "branch",
+                  "value": "{{branch_id}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Manage products example",
+              "originalRequest": {
+                "method": "GET"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[]"
+            }
+          ]
+        },
+        {
+          "name": "Create category",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Panini\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/manage-categories/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manage-categories",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Category create example",
+              "originalRequest": {
+                "method": "POST"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 6,\n  \"name\": \"Panini\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create product",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Beef Burger\",\n  \"price\": 3200,\n  \"description\": \"Juicy burger\",\n  \"category\": 1,\n  \"branch\": 1,\n  \"is_available\": true,\n  \"image_urls\": [\n    \"https://example.com/burger.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/manage-products/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manage-products",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Product create example",
+              "originalRequest": {
+                "method": "POST"
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 20,\n  \"name\": \"Beef Burger\",\n  \"price\": 3200,\n  \"description\": \"Juicy burger\",\n  \"category\": 1,\n  \"branch\": 1,\n  \"is_available\": true,\n  \"images\": [\n    {\n      \"id\": 1,\n      \"image_url\": \"https://example.com/burger.jpg\",\n      \"sort_order\": 0\n    }\n  ],\n  \"reviews\": [],\n  \"avg_rating\": 0.0,\n  \"reviews_count\": 0\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update product",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Beef Burger XL\",\n  \"price\": 3500,\n  \"description\": \"Updated burger\",\n  \"category\": 1,\n  \"branch\": 1,\n  \"is_available\": true,\n  \"image_urls\": [\n    \"https://example.com/burger-xl.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/manage-products/{{product_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manage-products",
+                "{{product_id}}",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Product update example",
+              "originalRequest": {
+                "method": "PUT"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 20,\n  \"name\": \"Beef Burger XL\",\n  \"price\": 3500,\n  \"description\": \"Updated burger\",\n  \"category\": 1,\n  \"branch\": 1,\n  \"is_available\": true,\n  \"images\": [\n    {\n      \"id\": 1,\n      \"image_url\": \"https://example.com/burger-xl.jpg\",\n      \"sort_order\": 0\n    }\n  ],\n  \"reviews\": [],\n  \"avg_rating\": 0.0,\n  \"reviews_count\": 0\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete product",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/manage-products/{{product_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manage-products",
+                "{{product_id}}",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Delete product example",
+              "originalRequest": {
+                "method": "DELETE"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Товар удалён\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update order status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Order status example",
+              "originalRequest": {
+                "method": "PUT"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 10,\n  \"status\": \"accepted\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Producer stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/producer-stats/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "producer-stats",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Producer stats example",
+              "originalRequest": {
+                "method": "GET"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"total_orders\": 5,\n  \"new_orders\": 2,\n  \"accepted_orders\": 1,\n  \"ready_orders\": 1,\n  \"out_of_stock_orders\": 0,\n  \"completed_orders\": 1,\n  \"popular_products\": [\n    {\n      \"name\": \"Chicken Panini\",\n      \"total_qty\": 7\n    }\n  ],\n  \"orders_by_branch\": [\n    {\n      \"branch_name\": \"KBTU Branch\",\n      \"order_count\": 5,\n      \"total_items\": 12\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
