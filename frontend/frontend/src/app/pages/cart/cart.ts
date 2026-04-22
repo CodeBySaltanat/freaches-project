@@ -2,7 +2,9 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { CartService, CartItem } from '../../services/cart';
+import { ApiService } from '../../services/api';
 
 @Component({
   selector: 'app-cart',
@@ -20,6 +22,7 @@ export class CartComponent implements OnInit {
 
   constructor(
     private cartService: CartService,
+    private api: ApiService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -102,18 +105,20 @@ export class CartComponent implements OnInit {
     };
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/orders/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + token.trim()
-        },
-        body: JSON.stringify(orderData)
-      });
+      const result = await firstValueFrom(this.api.post<any>('/orders/', orderData));
 
-      const result = await response.json().catch(() => ({}));
+      this.cartService.clearCart();
+      this.cart = [];
+      this.address = '';
+      this.comment = '';
+      this.loading = false;
+      this.errorMessage = '';
+      this.cdr.detectChanges();
 
-      if (response.status === 401) {
+      alert(result?.message || 'Заказ успешно оформлен!');
+      this.router.navigate(['/orders']);
+    } catch (error: any) {
+      if (error?.status === 401) {
         localStorage.clear();
         this.loading = false;
         this.errorMessage = 'Сессия истекла. Войди заново.';
@@ -122,22 +127,8 @@ export class CartComponent implements OnInit {
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(result.error || ('HTTP ' + response.status));
-      }
-
-      this.cartService.clearCart();
-      this.cart = [];
-      this.address = '';
-      this.comment = '';
       this.loading = false;
-      this.cdr.detectChanges();
-
-      this.router.navigate(['/orders']);
-    } catch (error) {
-      this.loading = false;
-      this.errorMessage =
-        error instanceof Error ? error.message : 'Не удалось отправить заказ.';
+      this.errorMessage = error?.error?.error || error?.message || 'Не удалось оформить заказ.';
       this.cdr.detectChanges();
     }
   }

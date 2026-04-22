@@ -3,7 +3,7 @@
 ## Project Description
 A full-stack web application designed for a fast-food delivery service, with a core specialty in signature sandwiches and panini. The system provides a seamless user experience for browsing the menu, managing a shopping cart, and securely placing orders. The project is built using a modern tech stack, featuring an Angular frontend and a RESTful API backend powered by Django Rest Framework.
 
-## Team Members (Practice Lesson: [Укажи номер группы/имя преподавателя])
+## Team Members (Practice Lesson: Wednesday 10.00 | Leila Beken )
 * Sultanakhmet Saltanat (Team Lead / Full-stack Developer)
 * Mukhtarova Sarbinaz (Backend Developer)
 * Turlybekova Nurdana(Frontend Developer)

@@ -1,6 +1,8 @@
 import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { ApiService } from '../../services/api';
 
 interface OrderItem {
   product_name: string;
@@ -561,6 +563,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
+    private api: ApiService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -612,28 +615,15 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
       this.loading = false;
       this.cdr.detectChanges();
-    } catch (error) {
+    } catch (error: any) {
       this.loading = false;
-      this.errorMessage =
-        error instanceof Error ? error.message : 'Не удалось загрузить данные.';
+      this.errorMessage = error?.error?.error || error?.message || 'Не удалось загрузить данные.';
       this.cdr.detectChanges();
     }
   }
 
   async loadOrders(updateView = true): Promise<void> {
-    const token = localStorage.getItem('token');
-
-    const response = await fetch('http://127.0.0.1:8000/api/orders/', {
-      headers: {
-        Authorization: 'Bearer ' + token
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Не удалось загрузить заказы');
-    }
-
-    const data = await response.json();
+    const data = await firstValueFrom(this.api.get<Order[]>('/orders/'));
     this.orders = Array.isArray(data) ? data : [];
 
     if (updateView) {
@@ -642,19 +632,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   async loadStats(updateView = true): Promise<void> {
-    const token = localStorage.getItem('token');
-
-    const response = await fetch('http://127.0.0.1:8000/api/producer-stats/', {
-      headers: {
-        Authorization: 'Bearer ' + token
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Не удалось загрузить статистику');
-    }
-
-    this.stats = await response.json();
+    this.stats = await firstValueFrom(this.api.get<ProducerStats>('/producer-stats/'));
 
     if (updateView) {
       this.cdr.detectChanges();
@@ -664,22 +642,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
   async updateStatus(orderId: number, status: string): Promise<void> {
     try {
       this.errorMessage = '';
-      const token = localStorage.getItem('token');
 
-      const response = await fetch('http://127.0.0.1:8000/api/orders/' + orderId + '/', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + token
-        },
-        body: JSON.stringify({ status })
-      });
-
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Не удалось обновить статус');
-      }
+      await firstValueFrom(this.api.put<any>(`/orders/${orderId}/`, { status }));
 
       await this.loadOrders(false);
 
@@ -689,9 +653,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
       this.showSuccess('Статус заказа обновлён');
       this.cdr.detectChanges();
-    } catch (error) {
-      this.errorMessage =
-        error instanceof Error ? error.message : 'Не удалось обновить статус.';
+    } catch (error: any) {
+      this.errorMessage = error?.error?.error || error?.message || 'Не удалось обновить статус.';
       this.cdr.detectChanges();
     }
   }

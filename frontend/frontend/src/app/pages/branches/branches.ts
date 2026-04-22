@@ -1,7 +1,9 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { CartService } from '../../services/cart';
+import { ApiService } from '../../services/api';
 
 @Component({
   selector: 'app-branches',
@@ -18,7 +20,8 @@ export class BranchesComponent implements OnInit {
   constructor(
     private router: Router,
     private cartService: CartService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private api: ApiService
   ) {}
 
   ngOnInit(): void {
@@ -32,20 +35,13 @@ export class BranchesComponent implements OnInit {
 
   async loadBranches() {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/branches/');
-
-      if (!response.ok) {
-        throw new Error('Не удалось загрузить филиалы');
-      }
-
-      const data = await response.json();
+      const data = await firstValueFrom(this.api.get<any[]>('/branches/'));
       this.branches = Array.isArray(data) ? data : [];
       this.loading = false;
       this.errorMessage = '';
       this.cdr.detectChanges();
-    } catch (error) {
-      this.errorMessage =
-        error instanceof Error ? error.message : 'Не удалось загрузить филиалы.';
+    } catch (error: any) {
+      this.errorMessage = error?.error?.error || 'Не удалось загрузить филиалы.';
       this.loading = false;
       this.cdr.detectChanges();
     }

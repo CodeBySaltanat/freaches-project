@@ -2,7 +2,9 @@ import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { CartService } from '../../services/cart';
+import { ApiService } from '../../services/api';
 
 @Component({
   selector: 'app-profile',
@@ -31,6 +33,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private cartService: CartService,
+    private api: ApiService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -57,33 +60,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.errorMessage = '';
       this.cdr.detectChanges();
 
-      const token = localStorage.getItem('token');
-
-      const response = await fetch('http://127.0.0.1:8000/api/profile/', {
-        headers: {
-          Authorization: 'Bearer ' + token
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Не удалось загрузить профиль');
-      }
-
-      const data = await response.json();
+      const data = await firstValueFrom(this.api.get<any>('/profile/'));
 
       this.profile = data;
-      this.recentOrders = Array.isArray(data.recent_orders) ? data.recent_orders : [];
-      this.fullName = data.full_name || '';
-      this.phone = data.phone || '';
-      this.savedAddresses = Array.isArray(data.saved_addresses) ? data.saved_addresses : [];
+      this.recentOrders = Array.isArray(data?.recent_orders) ? data.recent_orders : [];
+      this.fullName = data?.full_name || '';
+      this.phone = data?.phone || '';
+      this.savedAddresses = Array.isArray(data?.saved_addresses) ? data.saved_addresses : [];
 
       this.loading = false;
       this.errorMessage = '';
       this.cdr.detectChanges();
-    } catch (error) {
+    } catch (error: any) {
       this.loading = false;
-      this.errorMessage =
-        error instanceof Error ? error.message : 'Не удалось загрузить профиль.';
+      this.errorMessage = error?.error?.error || error?.message || 'Не удалось загрузить профиль.';
       this.cdr.detectChanges();
     }
   }
@@ -125,34 +115,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   async saveProfile(): Promise<void> {
     try {
-      const token = localStorage.getItem('token');
-
-      const response = await fetch('http://127.0.0.1:8000/api/profile/', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          full_name: this.fullName,
-          phone: this.phone,
-          saved_addresses: this.savedAddresses
-        })
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Не удалось сохранить профиль');
-      }
+      await firstValueFrom(this.api.put<any>('/profile/', {
+        full_name: this.fullName,
+        phone: this.phone,
+        saved_addresses: this.savedAddresses
+      }));
 
       this.errorMessage = '';
       this.showSuccess('Профиль сохранён');
       await this.loadProfile();
-    } catch (error) {
+    } catch (error: any) {
       this.successMessage = '';
-      this.errorMessage =
-        error instanceof Error ? error.message : 'Не удалось сохранить профиль.';
+      this.errorMessage = error?.error?.error || error?.message || 'Не удалось сохранить профиль.';
       this.cdr.detectChanges();
     }
   }
