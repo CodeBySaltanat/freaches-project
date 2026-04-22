@@ -19,6 +19,7 @@ urlpatterns = [
     path('orders/<int:pk>/', OrderView.as_view()),
 
     path('login/', CustomTokenObtainPairView.as_view()),
+    path('logout/', logout_user),
     path('register/', register_user),
     path('profile/', ProfileView.as_view()),
     path('producer-stats/', ProducerStatsView.as_view()),

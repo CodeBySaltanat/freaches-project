@@ -25,6 +25,9 @@ from .serializers import (
     OrderSerializer,
     ProfileSerializer,
     ReviewSerializer,
+    RegisterSerializer,
+    ReviewCreateSerializer,
+    LogoutSerializer,
     CustomTokenObtainPairSerializer,
 )
 
@@ -204,22 +207,16 @@ class ProductReviewView(APIView):
         if not has_ordered:
             return Response({'error': 'Можно оставлять отзыв только на заказанный товар'}, status=403)
 
-        try:
-            rating = int(request.data.get('rating'))
-        except (TypeError, ValueError):
-            return Response({'error': 'Оценка должна быть числом от 1 до 5'}, status=400)
-
-        if rating < 1 or rating > 5:
-            return Response({'error': 'Оценка должна быть от 1 до 5'}, status=400)
-
-        comment = str(request.data.get('comment', '')).strip()
+        serializer = ReviewCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
 
         review, created = Review.objects.update_or_create(
             product=product,
             user=request.user,
             defaults={
-                'rating': rating,
-                'comment': comment
+                'rating': serializer.validated_data['rating'],
+                'comment': serializer.validated_data.get('comment', '').strip()
             }
         )
 
@@ -437,18 +434,17 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_user(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    role = request.data.get('role', 'buyer')
+    serializer = RegisterSerializer(data=request.data)
 
-    if not username or not password:
-        return Response({'error': 'Нужны логин и пароль'}, status=400)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=400)
 
-    if role not in ['buyer', 'producer']:
-        return Response({'error': 'Неверная роль'}, status=400)
+    username = serializer.validated_data['username']
+    password = serializer.validated_data['password']
+    role = serializer.validated_data['role']
 
     if User.objects.filter(username=username).exists():
-        return Response({'error': 'Такой юзер already exists'}, status=400)
+        return Response({'error': 'Такой пользователь уже существует'}, status=400)
 
     user = User.objects.create_user(username=username, password=password)
     UserProfile.objects.update_or_create(user=user, defaults={'role': role})
@@ -457,3 +453,14 @@ def register_user(request):
         'message': 'Пользователь успешно зарегистрирован',
         'user': ProfileSerializer(user).data
     }, status=201)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_user(request):
+    serializer = LogoutSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    return Response({
+        'message': 'Вы успешно вышли из системы'
+    }, status=200)

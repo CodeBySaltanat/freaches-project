@@ -15,6 +15,21 @@ from .models import (
 )
 
 
+class RegisterSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(write_only=True, min_length=4)
+    role = serializers.ChoiceField(choices=['buyer', 'producer'])
+
+
+class ReviewCreateSerializer(serializers.Serializer):
+    rating = serializers.IntegerField(min_value=1, max_value=5)
+    comment = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(required=False, allow_blank=True)
+
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
